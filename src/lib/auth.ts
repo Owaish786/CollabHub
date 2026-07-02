@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
+import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import dbConnect from "@/lib/db";
@@ -8,6 +9,8 @@ import { loginSchema } from "@/lib/validators";
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+const githubClientId = process.env.GITHUB_ID;
+const githubClientSecret = process.env.GITHUB_SECRET;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -16,6 +19,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           Google({
             clientId: googleClientId,
             clientSecret: googleClientSecret,
+          }),
+        ]
+      : []),
+    ...(githubClientId && githubClientSecret
+      ? [
+          GitHub({
+            clientId: githubClientId,
+            clientSecret: githubClientSecret,
           }),
         ]
       : []),
@@ -75,7 +86,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === "google") {
+      if (account?.provider === "google" || account?.provider === "github") {
         await dbConnect();
 
         if (!user.email) {
@@ -84,12 +95,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const normalizedEmail = user.email.toLowerCase();
         const update: {
-          $setOnInsert: { email: string; name: string };
+          $setOnInsert: { email: string; name: string; authProvider: string; providerId: string };
           $set?: { image?: string };
         } = {
           $setOnInsert: {
             email: normalizedEmail,
             name: user.name || normalizedEmail.split("@")[0],
+            authProvider: account.provider,
+            providerId: account.providerAccountId,
           },
         };
 

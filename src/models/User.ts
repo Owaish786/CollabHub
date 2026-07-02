@@ -6,6 +6,8 @@ export interface IUser extends Document {
   email: string;
   image?: string;
   hashedPassword?: string;
+  authProvider?: "credentials" | "google" | "github";
+  providerId?: string;
   workspaces: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
@@ -35,6 +37,15 @@ const UserSchema = new Schema<IUser>(
     hashedPassword: {
       type: String,
       select: false, // Don't include in queries by default
+    },
+    authProvider: {
+      type: String,
+      enum: ["credentials", "google", "github"],
+      default: "credentials",
+    },
+    providerId: {
+      type: String,
+      index: true,
     },
     workspaces: [
       {
