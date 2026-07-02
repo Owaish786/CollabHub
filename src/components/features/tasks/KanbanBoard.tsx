@@ -45,7 +45,6 @@ export function KanbanBoard({ tasks, onReorder, onTaskClick, onNewTask }: Props)
       return;
     }
 
-    const sourceStatus = source.droppableId as Task["status"];
     const destStatus = destination.droppableId as Task["status"];
 
     const newTasks = Array.from(tasks);

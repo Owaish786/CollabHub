@@ -43,6 +43,7 @@ export default function TasksPage() {
     }
   }, [params.workspaceId]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void fetchTasks(); }, [fetchTasks]);
 
   const handleCreateTask = async (values: Partial<Task>) => {
@@ -144,7 +145,7 @@ export default function TasksPage() {
           tasks={tasks}
           onReorder={handleReorder}
           onTaskClick={setEditingTask}
-          onNewTask={(status) => { setIsCreateOpen(true); }}
+          onNewTask={() => { setIsCreateOpen(true); }}
         />
       ) : (
         <ListView

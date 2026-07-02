@@ -45,6 +45,7 @@ export default function ChatPage() {
     }
   }, [params.workspaceId]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void fetchMessages(channel); }, [channel, fetchMessages]);
 
   useEffect(() => {

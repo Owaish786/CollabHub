@@ -20,6 +20,22 @@ interface Props {
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+const ToolbarButton = ({
+  onClick, active, disabled, title: tip, children,
+}: { onClick: () => void; active?: boolean; disabled?: boolean; title: string; children: React.ReactNode }) => (
+  <button
+    onMouseDown={(e) => { e.preventDefault(); onClick(); }}
+    disabled={disabled}
+    title={tip}
+    className={cn(
+      "rounded p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900",
+      active && "bg-indigo-50 text-indigo-700"
+    )}
+  >
+    {children}
+  </button>
+);
+
 export function RichEditor({ docId, initialTitle, initialContent, workspaceId }: Props) {
   const [title, setTitle] = useState(initialTitle);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
@@ -72,22 +88,6 @@ export function RichEditor({ docId, initialTitle, initialContent, workspaceId }:
   }, [title]);
 
   if (!editor) return null;
-
-  const ToolbarButton = ({
-    onClick, active, disabled, title: tip, children,
-  }: { onClick: () => void; active?: boolean; disabled?: boolean; title: string; children: React.ReactNode }) => (
-    <button
-      onMouseDown={(e) => { e.preventDefault(); onClick(); }}
-      disabled={disabled}
-      title={tip}
-      className={cn(
-        "rounded p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900",
-        active && "bg-indigo-50 text-indigo-700"
-      )}
-    >
-      {children}
-    </button>
-  );
 
   return (
     <div className="flex h-full flex-col bg-white">
