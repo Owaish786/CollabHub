@@ -7,6 +7,7 @@ import { TaskModal } from "@/components/features/tasks/TaskModal";
 import { Plus, LayoutGrid, List, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useSocket } from "@/components/providers/SocketProvider";
 
 export type Task = {
   id: string;
@@ -31,6 +32,7 @@ export default function TasksPage() {
   const [view, setView] = useState<View>("kanban");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const { socket, isConnected } = useSocket();
 
   const fetchTasks = useCallback(async () => {
     setLoading(true);
@@ -46,6 +48,27 @@ export default function TasksPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void fetchTasks(); }, [fetchTasks]);
 
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    // Join workspace room
+    socket.emit("join-workspace", params.workspaceId);
+
+    // Listen for task updates
+    const handleTasksUpdated = () => {
+      // Simplest way to sync state is to refetch from DB
+      // to ensure all statuses and orders are exactly matched.
+      void fetchTasks();
+    };
+
+    socket.on("tasks-updated", handleTasksUpdated);
+
+    return () => {
+      socket.emit("leave-workspace", params.workspaceId);
+      socket.off("tasks-updated", handleTasksUpdated);
+    };
+  }, [socket, isConnected, params.workspaceId, fetchTasks]);
+
   const handleCreateTask = async (values: Partial<Task>) => {
     const res = await fetch("/api/tasks", {
       method: "POST",
@@ -56,6 +79,9 @@ export default function TasksPage() {
     if (data.success) {
       setTasks((prev) => [...prev, data.data as Task]);
       setIsCreateOpen(false);
+      if (socket && isConnected) {
+        socket.emit("tasks-updated", { workspaceId: params.workspaceId });
+      }
     }
   };
 
@@ -69,6 +95,9 @@ export default function TasksPage() {
     if (data.success) {
       setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...data.data } : t)));
       setEditingTask(null);
+      if (socket && isConnected) {
+        socket.emit("tasks-updated", { workspaceId: params.workspaceId });
+      }
     }
   };
 
@@ -76,6 +105,9 @@ export default function TasksPage() {
     await fetch(`/api/tasks/${id}`, { method: "DELETE" });
     setTasks((prev) => prev.filter((t) => t.id !== id));
     setEditingTask(null);
+    if (socket && isConnected) {
+      socket.emit("tasks-updated", { workspaceId: params.workspaceId });
+    }
   };
 
   const handleReorder = async (newTasks: Task[]) => {
@@ -96,6 +128,10 @@ export default function TasksPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ workspaceId: params.workspaceId, tasks: payload }),
     });
+
+    if (socket && isConnected) {
+      socket.emit("tasks-updated", { workspaceId: params.workspaceId });
+    }
   };
 
   return (

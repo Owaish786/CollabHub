@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  collabhub:
+    build: .
+    ports:
+      - "80:3000"
+    environment:
+      # NextAuth requires NEXTAUTH_URL to be exactly the domain where it's hosted
+      - NEXTAUTH_URL=http://YOUR_EC2_IP_OR_DOMAIN
+      # Add the same values from your .env.local here for deployment
+      - MONGODB_URI=
+      - AUTH_SECRET=
+      - GOOGLE_CLIENT_ID=
+      - GOOGLE_CLIENT_SECRET=
+      - GITHUB_ID=
+      - GITHUB_SECRET=
+    restart: unless-stopped

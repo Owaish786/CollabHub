@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { Hash, Send, Loader2, SmilePlus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useSocket } from "@/components/providers/SocketProvider";
 
 type Message = {
   id: string;
@@ -31,6 +32,7 @@ export default function ChatPage() {
   const [showEmoji, setShowEmoji] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const { socket, isConnected } = useSocket();
 
   const fetchMessages = useCallback(async (ch: string) => {
     setLoading(true);
@@ -49,6 +51,31 @@ export default function ChatPage() {
   useEffect(() => { void fetchMessages(channel); }, [channel, fetchMessages]);
 
   useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    // Join workspace room
+    socket.emit("join-workspace", params.workspaceId);
+
+    // Listen for new messages
+    const handleNewMessage = (newMessage: Message) => {
+      if (newMessage.channel === channel) {
+        setMessages((prev) => {
+          // Prevent duplicates
+          if (prev.some((msg) => msg.id === newMessage.id)) return prev;
+          return [...prev, newMessage];
+        });
+      }
+    };
+
+    socket.on("new-message", handleNewMessage);
+
+    return () => {
+      socket.emit("leave-workspace", params.workspaceId);
+      socket.off("new-message", handleNewMessage);
+    };
+  }, [socket, isConnected, params.workspaceId, channel]);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -64,7 +91,18 @@ export default function ChatPage() {
         body: JSON.stringify({ workspaceId: params.workspaceId, channel, content: text }),
       });
       const data = await res.json();
-      if (data.success) setMessages((prev) => [...prev, data.data as Message]);
+      if (data.success) {
+        const savedMessage = data.data as Message;
+        setMessages((prev) => [...prev, savedMessage]);
+        
+        // Broadcast via Socket.io
+        if (socket && isConnected) {
+          socket.emit("send-message", {
+            workspaceId: params.workspaceId,
+            message: savedMessage
+          });
+        }
+      }
     } finally {
       setSending(false);
       inputRef.current?.focus();
