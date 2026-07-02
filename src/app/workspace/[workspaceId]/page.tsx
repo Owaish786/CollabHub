@@ -6,6 +6,7 @@ import Workspace from "@/models/Workspace";
 import Task from "@/models/Task";
 import CollabDocument from "@/models/Document";
 import Message from "@/models/Message";
+import mongoose from "mongoose";
 import { CheckSquare, FileText, MessageSquare, Users, ArrowRight, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -23,7 +24,7 @@ export default async function WorkspaceOverviewPage({ params }: Props) {
   const [workspace, taskStats, recentDocs, recentMessages] = await Promise.all([
     Workspace.findById(workspaceId).populate("members.user", "name email").lean(),
     Task.aggregate([
-      { $match: { workspace: workspace?._id ?? workspaceId } },
+      { $match: { workspace: new mongoose.Types.ObjectId(workspaceId) } },
       { $group: { _id: "$status", count: { $sum: 1 } } },
     ]),
     CollabDocument.find({ workspace: workspaceId })
