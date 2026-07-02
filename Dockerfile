@@ -44,6 +44,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # We also need to copy our custom server.js
 COPY --from=builder --chown=nextjs:nodejs /app/server.js ./server.js
 
+# Install socket.io since standalone mode doesn't trace custom server.js imports
+RUN npm install socket.io
+
 USER nextjs
 
 EXPOSE 3000
