@@ -48,6 +48,9 @@ export function CreateWorkspaceForm() {
       setName("");
       setDescription("");
       router.refresh();
+      if (data.data?.id) {
+        router.push(`/workspace/${data.data.id}`);
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

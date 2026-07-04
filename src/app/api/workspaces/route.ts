@@ -77,36 +77,44 @@ export async function POST(request: Request) {
     );
   }
 
-  await dbConnect();
+  try {
+    await dbConnect();
 
-  const workspace = await Workspace.create({
-    name: parsed.data.name,
-    description: parsed.data.description ?? "",
-    owner: session.user.id,
-    members: [
+    const workspace = await Workspace.create({
+      name: parsed.data.name,
+      description: parsed.data.description ?? "",
+      owner: session.user.id,
+      members: [
+        {
+          user: session.user.id,
+          role: "owner",
+          joinedAt: new Date(),
+        },
+      ],
+    });
+
+    await User.findByIdAndUpdate(session.user.id, {
+      $addToSet: { workspaces: workspace._id },
+    });
+
+    return NextResponse.json(
       {
-        user: session.user.id,
-        role: "owner",
-        joinedAt: new Date(),
+        success: true,
+        data: {
+          id: workspace._id.toString(),
+          name: workspace.name,
+          slug: workspace.slug,
+          description: workspace.description,
+        },
+        message: "Workspace created successfully",
       },
-    ],
-  });
-
-  await User.findByIdAndUpdate(session.user.id, {
-    $addToSet: { workspaces: workspace._id },
-  });
-
-  return NextResponse.json(
-    {
-      success: true,
-      data: {
-        id: workspace._id.toString(),
-        name: workspace.name,
-        slug: workspace.slug,
-        description: workspace.description,
-      },
-      message: "Workspace created successfully",
-    },
-    { status: 201 }
-  );
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("Workspace creation failed:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to create workspace" },
+      { status: 500 }
+    );
+  }
 }
