@@ -30,22 +30,18 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Copy all necessary files for a standard custom server
 COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/server.js ./server.js
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# We also need to copy our custom server.js
-COPY --from=builder --chown=nextjs:nodejs /app/server.js ./server.js
-
-# Install socket.io since standalone mode doesn't trace custom server.js imports
-RUN npm install socket.io
+# We need next to run the custom server.js, and since it relies on project structure, 
+# we also need the src files (or just let next run with the compiled .next)
+# Wait, next({ dev: false }) actually serves from .next folder, it doesn't recompile src,
+# but it sometimes looks for next.config.ts if it exists.
+COPY --from=builder /app/next.config.ts ./next.config.ts
 
 USER nextjs
 
