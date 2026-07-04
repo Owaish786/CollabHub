@@ -1,7 +1,7 @@
 "use client";
 
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
-import { Plus } from "lucide-react";
+import { Plus, AlertTriangle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/app/workspace/[workspaceId]/tasks/page";
 
@@ -26,14 +26,27 @@ const priorityColor: Record<string, string> = {
   urgent: "bg-red-100 text-red-700",
 };
 
+function getDeadlineStatus(deadline?: string): "overdue" | "due-soon" | null {
+  if (!deadline) return null;
+  const now = new Date();
+  const due = new Date(deadline);
+  const diffMs = due.getTime() - now.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+  if (diffDays < 0) return "overdue";
+  if (diffDays <= 2) return "due-soon";
+  return null;
+}
+
 interface Props {
   tasks: Task[];
+  allTasks: Task[];
   onReorder: (newTasks: Task[]) => void;
   onTaskClick: (task: Task) => void;
   onNewTask: (status: Task["status"]) => void;
 }
 
-export function KanbanBoard({ tasks, onReorder, onTaskClick, onNewTask }: Props) {
+export function KanbanBoard({ tasks, allTasks, onReorder, onTaskClick, onNewTask }: Props) {
   const tasksByStatus = (status: Task["status"]) =>
     tasks.filter((t) => t.status === status).sort((a, b) => a.order - b.order);
 
@@ -47,23 +60,20 @@ export function KanbanBoard({ tasks, onReorder, onTaskClick, onNewTask }: Props)
 
     const destStatus = destination.droppableId as Task["status"];
 
-    const newTasks = Array.from(tasks);
+    // Work with allTasks for reordering (not filtered)
+    const newTasks = Array.from(allTasks);
     const taskIndex = newTasks.findIndex(t => t.id === draggableId);
     
     if (taskIndex === -1) return;
 
-    // Update status
     newTasks[taskIndex].status = destStatus;
 
-    // Get all tasks in destination column (excluding the moved task if it was already there)
     const destTasks = newTasks
       .filter(t => t.status === destStatus && t.id !== draggableId)
       .sort((a, b) => a.order - b.order);
 
-    // Insert task at new index
     destTasks.splice(destination.index, 0, newTasks[taskIndex]);
 
-    // Re-assign order for the affected column
     destTasks.forEach((t, i) => {
       const idx = newTasks.findIndex(nt => nt.id === t.id);
       if (idx !== -1) newTasks[idx].order = i;
@@ -107,49 +117,110 @@ export function KanbanBoard({ tasks, onReorder, onTaskClick, onNewTask }: Props)
                       snapshot.isDraggingOver ? col.color : "bg-slate-100/60"
                     )}
                   >
-                    {colTasks.map((task, index) => (
-                      <Draggable key={task.id} draggableId={task.id} index={index}>
-                        {(drag, dragSnapshot) => (
-                          <div
-                            ref={drag.innerRef}
-                            {...drag.draggableProps}
-                            {...drag.dragHandleProps}
-                            onClick={() => onTaskClick(task)}
-                            className={cn(
-                              "cursor-pointer rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm transition-shadow",
-                              dragSnapshot.isDragging && "shadow-lg rotate-1"
-                            )}
-                          >
-                            <p className="text-[13px] font-medium leading-snug text-slate-800">
-                              {task.title}
-                            </p>
-                            {task.description && (
-                              <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-slate-400">
-                                {task.description}
-                              </p>
-                            )}
-                            <div className="mt-3 flex items-center justify-between">
-                              <span
-                                className={cn(
-                                  "rounded-full px-2 py-0.5 text-[11px] font-medium",
-                                  priorityColor[task.priority]
-                                )}
-                              >
-                                {task.priority}
-                              </span>
-                              {task.deadline && (
-                                <span className="text-[11px] text-slate-400">
-                                  {new Date(task.deadline).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                  })}
-                                </span>
+                    {colTasks.map((task, index) => {
+                      const deadlineStatus = getDeadlineStatus(task.deadline);
+                      const completedSubtasks = task.subtasks?.filter((s) => s.completed).length ?? 0;
+                      const totalSubtasks = task.subtasks?.length ?? 0;
+                      const subtaskProgress = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
+
+                      return (
+                        <Draggable key={task.id} draggableId={task.id} index={index}>
+                          {(drag, dragSnapshot) => (
+                            <div
+                              ref={drag.innerRef}
+                              {...drag.draggableProps}
+                              {...drag.dragHandleProps}
+                              onClick={() => onTaskClick(task)}
+                              className={cn(
+                                "cursor-pointer rounded-xl border bg-white shadow-sm transition-all overflow-hidden",
+                                dragSnapshot.isDragging && "shadow-lg rotate-1",
+                                deadlineStatus === "overdue"
+                                  ? "border-red-300 ring-1 ring-red-200"
+                                  : deadlineStatus === "due-soon"
+                                  ? "border-amber-300 ring-1 ring-amber-200"
+                                  : "border-slate-200"
                               )}
+                            >
+                              {/* Cover color strip */}
+                              {task.coverColor && (
+                                <div
+                                  className="h-1.5 w-full"
+                                  style={{ backgroundColor: task.coverColor }}
+                                />
+                              )}
+
+                              <div className="p-3.5">
+                                <p className="text-[13px] font-medium leading-snug text-slate-800">
+                                  {task.title}
+                                </p>
+                                {task.description && (
+                                  <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-slate-400">
+                                    {task.description}
+                                  </p>
+                                )}
+
+                                {/* Subtask progress bar */}
+                                {totalSubtasks > 0 && (
+                                  <div className="mt-2.5">
+                                    <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1">
+                                      <span>Subtasks</span>
+                                      <span className="font-medium">{completedSubtasks}/{totalSubtasks}</span>
+                                    </div>
+                                    <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                                      <div
+                                        className={cn(
+                                          "h-full rounded-full transition-all duration-300",
+                                          subtaskProgress === 100
+                                            ? "bg-emerald-500"
+                                            : "bg-indigo-500"
+                                        )}
+                                        style={{ width: `${subtaskProgress}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className="mt-3 flex items-center justify-between">
+                                  <div className="flex items-center gap-1.5">
+                                    <span
+                                      className={cn(
+                                        "rounded-full px-2 py-0.5 text-[11px] font-medium",
+                                        priorityColor[task.priority]
+                                      )}
+                                    >
+                                      {task.priority}
+                                    </span>
+
+                                    {/* Deadline warning badges */}
+                                    {deadlineStatus === "overdue" && (
+                                      <span className="inline-flex items-center gap-0.5 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
+                                        <AlertTriangle className="h-2.5 w-2.5" />
+                                        Overdue
+                                      </span>
+                                    )}
+                                    {deadlineStatus === "due-soon" && (
+                                      <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                                        <Clock className="h-2.5 w-2.5" />
+                                        Due soon
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {task.deadline && !deadlineStatus && (
+                                    <span className="text-[11px] text-slate-400">
+                                      {new Date(task.deadline).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                      })}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
+                          )}
+                        </Draggable>
+                      );
+                    })}
                     {provided.placeholder}
 
                     {/* Empty column hint */}

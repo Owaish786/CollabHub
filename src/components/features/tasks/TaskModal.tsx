@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Trash2, Loader2, Calendar, Tag } from "lucide-react";
+import { X, Trash2, Loader2, Calendar, Tag, Sparkles, Check, Plus, Square, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import type { Task } from "@/app/workspace/[workspaceId]/tasks/page";
+import type { Task, Subtask } from "@/app/workspace/[workspaceId]/tasks/page";
 
 interface Props {
   mode: "create" | "edit";
@@ -18,6 +18,17 @@ interface Props {
 
 const STATUSES: Task["status"][] = ["todo", "in-progress", "review", "done"];
 const PRIORITIES: Task["priority"][] = ["low", "medium", "high", "urgent"];
+
+const COVER_COLORS = [
+  "#6366f1", // indigo
+  "#8b5cf6", // violet
+  "#ec4899", // pink
+  "#ef4444", // red
+  "#f97316", // orange
+  "#eab308", // yellow
+  "#22c55e", // green
+  "#06b6d4", // cyan
+];
 
 const priorityColor: Record<string, string> = {
   low:    "border-slate-300 bg-slate-50 text-slate-600",
@@ -34,8 +45,13 @@ export function TaskModal({ mode, task, onClose, onSubmit, onDelete }: Props) {
   const [deadline, setDeadline] = useState(task?.deadline ? task.deadline.slice(0, 10) : "");
   const [label, setLabel] = useState("");
   const [labels, setLabels] = useState<string[]>(task?.labels ?? []);
+  const [subtasks, setSubtasks] = useState<Subtask[]>(task?.subtasks ?? []);
+  const [newSubtaskText, setNewSubtaskText] = useState("");
+  const [coverColor, setCoverColor] = useState<string | null>(task?.coverColor ?? null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
 
   // Close on ESC
   useEffect(() => {
@@ -49,7 +65,16 @@ export function TaskModal({ mode, task, onClose, onSubmit, onDelete }: Props) {
     if (!title.trim()) return;
     setSaving(true);
     try {
-      await onSubmit({ title: title.trim(), description, status, priority, deadline: deadline || undefined, labels });
+      await onSubmit({
+        title: title.trim(),
+        description,
+        status,
+        priority,
+        deadline: deadline || undefined,
+        labels,
+        subtasks,
+        coverColor,
+      });
     } finally {
       setSaving(false);
     }
@@ -69,13 +94,65 @@ export function TaskModal({ mode, task, onClose, onSubmit, onDelete }: Props) {
     setLabel("");
   };
 
+  // Subtask helpers
+  const addSubtask = () => {
+    const trimmed = newSubtaskText.trim();
+    if (!trimmed) return;
+    setSubtasks((prev) => [...prev, { id: crypto.randomUUID(), text: trimmed, completed: false }]);
+    setNewSubtaskText("");
+  };
+
+  const toggleSubtask = (id: string) => {
+    setSubtasks((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, completed: !s.completed } : s))
+    );
+  };
+
+  const removeSubtask = (id: string) => {
+    setSubtasks((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  // AI Breakdown
+  const handleAiBreakdown = async () => {
+    if (!title.trim()) return;
+    setAiLoading(true);
+    setAiSuggestions([]);
+    try {
+      const res = await fetch("/api/ai/breakdown", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title.trim(), description }),
+      });
+      const data = await res.json();
+      if (data.success && data.suggestions) {
+        setAiSuggestions(data.suggestions);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const acceptSuggestion = (text: string) => {
+    setSubtasks((prev) => [...prev, { id: crypto.randomUUID(), text, completed: false }]);
+    setAiSuggestions((prev) => prev.filter((s) => s !== text));
+  };
+
+  const completedCount = subtasks.filter((s) => s.completed).length;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-lg animate-scale-in rounded-2xl border border-slate-200 bg-white shadow-strong">
+      <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto animate-scale-in rounded-2xl border border-slate-200 bg-white shadow-strong">
+        {/* Cover color preview */}
+        {coverColor && (
+          <div className="h-2 w-full rounded-t-2xl" style={{ backgroundColor: coverColor }} />
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
           <h2 className="text-base font-semibold text-slate-900">
@@ -111,6 +188,38 @@ export function TaskModal({ mode, task, onClose, onSubmit, onDelete }: Props) {
               rows={3}
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/20 resize-none"
             />
+          </div>
+
+          {/* Cover Color */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium text-slate-700">Card Color</Label>
+            <div className="flex items-center gap-2">
+              {/* No color option */}
+              <button
+                type="button"
+                onClick={() => setCoverColor(null)}
+                className={cn(
+                  "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all",
+                  coverColor === null ? "border-slate-400 bg-slate-100" : "border-slate-200 hover:border-slate-300"
+                )}
+              >
+                {coverColor === null && <X className="h-3 w-3 text-slate-500" />}
+              </button>
+              {COVER_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCoverColor(c)}
+                  className={cn(
+                    "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all",
+                    coverColor === c ? "border-slate-700 scale-110" : "border-transparent hover:scale-110"
+                  )}
+                  style={{ backgroundColor: c }}
+                >
+                  {coverColor === c && <Check className="h-3 w-3 text-white" />}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Status + Priority row */}
@@ -160,6 +269,117 @@ export function TaskModal({ mode, task, onClose, onSubmit, onDelete }: Props) {
               onChange={(e) => setDeadline(e.target.value)}
               className="border-slate-200 focus:border-indigo-400"
             />
+          </div>
+
+          {/* Subtasks */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-1.5 text-sm font-medium text-slate-700">
+                <CheckSquare className="h-3.5 w-3.5" /> Subtasks
+                {subtasks.length > 0 && (
+                  <span className="ml-1 text-xs font-normal text-slate-400">
+                    ({completedCount}/{subtasks.length})
+                  </span>
+                )}
+              </Label>
+
+              {/* AI Breakdown button */}
+              <button
+                type="button"
+                onClick={handleAiBreakdown}
+                disabled={aiLoading || !title.trim()}
+                className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 px-3 py-1 text-[11px] font-medium text-white shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {aiLoading ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3 w-3" />
+                )}
+                AI Breakdown
+              </button>
+            </div>
+
+            {/* Add subtask input */}
+            <div className="flex gap-2">
+              <Input
+                value={newSubtaskText}
+                onChange={(e) => setNewSubtaskText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSubtask(); } }}
+                placeholder="Add a subtask…"
+                className="border-slate-200 focus:border-indigo-400 text-sm"
+              />
+              <Button type="button" variant="outline" size="sm" onClick={addSubtask} className="border-slate-200 shrink-0">
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+
+            {/* Subtask list */}
+            {subtasks.length > 0 && (
+              <div className="space-y-1 rounded-lg border border-slate-100 bg-slate-50/50 p-2">
+                {subtasks.map((s) => (
+                  <div key={s.id} className="flex items-center gap-2 group">
+                    <button
+                      type="button"
+                      onClick={() => toggleSubtask(s.id)}
+                      className="shrink-0 text-slate-400 hover:text-indigo-600 transition-colors"
+                    >
+                      {s.completed ? (
+                        <CheckSquare className="h-4 w-4 text-emerald-500" />
+                      ) : (
+                        <Square className="h-4 w-4" />
+                      )}
+                    </button>
+                    <span className={cn(
+                      "flex-1 text-sm",
+                      s.completed ? "text-slate-400 line-through" : "text-slate-700"
+                    )}>
+                      {s.text}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeSubtask(s.id)}
+                      className="shrink-0 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+
+                {/* Progress bar */}
+                {subtasks.length > 0 && (
+                  <div className="mt-2 h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all duration-300",
+                        completedCount === subtasks.length ? "bg-emerald-500" : "bg-indigo-500"
+                      )}
+                      style={{ width: `${subtasks.length > 0 ? (completedCount / subtasks.length) * 100 : 0}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* AI Suggestions */}
+            {aiSuggestions.length > 0 && (
+              <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-3 space-y-2">
+                <p className="text-[11px] font-medium text-indigo-600 flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  AI Suggestions — click to add
+                </p>
+                {aiSuggestions.map((suggestion, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => acceptSuggestion(suggestion)}
+                    className="flex w-full items-center gap-2 rounded-md bg-white px-3 py-2 text-left text-sm text-slate-700 border border-indigo-100 hover:border-indigo-300 hover:bg-indigo-50 transition-all"
+                  >
+                    <Plus className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Labels */}

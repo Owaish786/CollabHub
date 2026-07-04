@@ -1,5 +1,5 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
-import type { TaskStatus, TaskPriority, TaskComment } from "@/types";
+import type { TaskStatus, TaskPriority, TaskComment, Subtask } from "@/types";
 
 export interface ITask extends Document {
   _id: mongoose.Types.ObjectId;
@@ -12,6 +12,8 @@ export interface ITask extends Document {
   assignees: mongoose.Types.ObjectId[];
   deadline?: Date;
   comments: TaskComment[];
+  subtasks: Subtask[];
+  coverColor?: string;
   labels: string[];
   order: number;
   createdBy: mongoose.Types.ObjectId;
@@ -82,6 +84,17 @@ const TaskSchema = new Schema<ITask>(
       type: Date,
     },
     comments: [TaskCommentSchema],
+    subtasks: [
+      {
+        id: { type: String, required: true },
+        text: { type: String, required: true, trim: true, maxlength: 300 },
+        completed: { type: Boolean, default: false },
+      },
+    ],
+    coverColor: {
+      type: String,
+      default: null,
+    },
     labels: [
       {
         type: String,

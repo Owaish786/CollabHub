@@ -38,6 +38,12 @@ export interface TaskComment {
   createdAt: Date;
 }
 
+export interface Subtask {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
 export interface FileAttachment {
   url: string;
   name: string;

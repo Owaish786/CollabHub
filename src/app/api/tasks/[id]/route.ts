@@ -14,6 +14,12 @@ const updateTaskSchema = z.object({
   deadline: z.string().datetime().nullable().optional(),
   labels: z.array(z.string()).optional(),
   order: z.number().optional(),
+  subtasks: z.array(z.object({
+    id: z.string(),
+    text: z.string().trim().min(1).max(300),
+    completed: z.boolean(),
+  })).optional(),
+  coverColor: z.string().nullable().optional(),
 });
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -106,6 +112,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   if (data.deadline !== undefined) updates.deadline = data.deadline ? new Date(data.deadline) : null;
   if (data.labels !== undefined) updates.labels = data.labels;
   if (data.order !== undefined) updates.order = data.order;
+  if (data.subtasks !== undefined) updates.subtasks = data.subtasks;
+  if (data.coverColor !== undefined) updates.coverColor = data.coverColor;
 
   const updated = await Task.findByIdAndUpdate(
     id,
@@ -127,6 +135,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       assignees: updated!.assignees,
       deadline: updated!.deadline,
       comments: updated!.comments,
+      subtasks: updated!.subtasks ?? [],
+      coverColor: updated!.coverColor ?? null,
       labels: updated!.labels,
       order: updated!.order,
       createdBy: updated!.createdBy,
