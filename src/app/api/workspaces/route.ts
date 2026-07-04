@@ -110,10 +110,10 @@ export async function POST(request: Request) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Workspace creation failed:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to create workspace" },
+      { success: false, error: error instanceof Error ? error.message : "Failed to create workspace" },
       { status: 500 }
     );
   }
