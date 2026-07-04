@@ -82,7 +82,7 @@ const WorkspaceSchema = new Schema<IWorkspace>(
 );
 
 // Generate slug from name before saving
-WorkspaceSchema.pre("validate", function (next) {
+WorkspaceSchema.pre("validate", function () {
   if (this.isModified("name") && !this.slug) {
     const randomSuffix = Math.random().toString(36).slice(2, 8);
     this.slug =
@@ -95,7 +95,6 @@ WorkspaceSchema.pre("validate", function (next) {
       "-" +
       randomSuffix;
   }
-  next();
 });
 
 const Workspace: Model<IWorkspace> =
