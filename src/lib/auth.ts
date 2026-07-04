@@ -138,4 +138,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
+  events: {
+    async signIn({ user }) {
+      if (user.email && user.name) {
+        // Send email notification asynchronously so it doesn't block login
+        void import("@/lib/email").then(({ sendLoginNotificationEmail }) => {
+          void sendLoginNotificationEmail({
+            to: user.email as string,
+            name: user.name as string,
+          });
+        });
+      }
+    },
+  },
 });

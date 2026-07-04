@@ -1,0 +1,8 @@
+
+> collabhub@0.1.0 dev
+> node server.js
+
+> Ready on http://0.0.0.0:3000
+(node:5100) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✓ Compiled in 604ms
