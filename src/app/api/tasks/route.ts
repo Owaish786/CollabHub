@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     deadline: parsed.data.deadline,
     labels: parsed.data.labels ?? [],
     subtasks: [],
-    coverColor: null,
+    coverColor: undefined,
     order,
     createdBy: session.user.id,
   });
