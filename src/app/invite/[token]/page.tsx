@@ -61,7 +61,7 @@ export default async function InvitePage({ params }: Props) {
           <div className="space-y-1">
             <CardTitle className="text-2xl font-bold tracking-tight">You&apos;ve been invited!</CardTitle>
             <CardDescription className="text-base text-slate-500">
-              <span className="font-medium text-slate-900">{invite.inviterId?.name || "A user"}</span> has invited you to join the{" "}
+              <span className="font-medium text-slate-900">{(invite.inviterId as any)?.name || "A user"}</span> has invited you to join the{" "}
               <span className="font-medium text-slate-900">{workspace.name}</span> workspace.
             </CardDescription>
           </div>

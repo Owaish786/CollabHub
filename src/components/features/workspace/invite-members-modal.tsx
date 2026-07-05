@@ -82,13 +82,11 @@ export function InviteMembersModal({ workspaceId }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <button className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-[13px] font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors mt-2 mb-2">
-          <span className="flex items-center gap-2">
-            <UserPlus className="h-4 w-4" />
-            Invite Members
-          </span>
-        </button>
+      <DialogTrigger className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-[13px] font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors mt-2 mb-2">
+        <span className="flex items-center gap-2">
+          <UserPlus className="h-4 w-4" />
+          Invite Members
+        </span>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

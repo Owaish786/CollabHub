@@ -11,6 +11,7 @@ export interface IInvite extends Document {
   status: "pending" | "used" | "expired";
   createdAt: Date;
   updatedAt: Date;
+  isExpired: boolean;
 }
 
 const InviteSchema = new Schema<IInvite>(

@@ -8,9 +8,10 @@ import { sendWorkspaceInviteEmail } from "@/lib/email";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
   try {
+    const { workspaceId } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -21,7 +22,7 @@ export async function POST(
     await dbConnect();
 
     // Verify the user is a member of the workspace with invite permissions
-    const workspace = await Workspace.findById(params.workspaceId);
+    const workspace = await Workspace.findById(workspaceId);
     if (!workspace) {
       return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
     }
@@ -92,9 +93,10 @@ export async function POST(
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
   try {
+    const { workspaceId } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -103,7 +105,7 @@ export async function GET(
     await dbConnect();
 
     // Verify workspace access
-    const workspace = await Workspace.findById(params.workspaceId);
+    const workspace = await Workspace.findById(workspaceId);
     if (!workspace) {
       return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
     }

@@ -3,12 +3,14 @@ import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Workspace, { IWorkspaceMember } from "@/models/Workspace";
 import Invite from "@/models/Invite";
+import mongoose from "mongoose";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
+    const { token } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -17,7 +19,7 @@ export async function POST(
     await dbConnect();
 
     // Find the invite
-    const invite = await Invite.findOne({ token: params.token });
+    const invite = await Invite.findOne({ token });
     if (!invite) {
       return NextResponse.json({ error: "Invalid invite link" }, { status: 404 });
     }
@@ -67,7 +69,7 @@ export async function POST(
 
     // Add user to workspace
     workspace.members.push({
-      user: session.user.id,
+      user: new mongoose.Types.ObjectId(session.user.id) as any,
       role: invite.role,
       joinedAt: new Date(),
     });
