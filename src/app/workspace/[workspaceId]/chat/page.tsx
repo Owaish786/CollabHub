@@ -41,7 +41,7 @@ export default function ChatPage() {
         `/api/chat?workspaceId=${params.workspaceId}&channel=${ch}&limit=50`
       );
       const data = await res.json();
-      if (data.success) setMessages((data.data as Message[]).reverse());
+      if (data.success) setMessages(data.data as Message[]);
     } finally {
       setLoading(false);
     }
