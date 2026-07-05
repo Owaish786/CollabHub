@@ -11,7 +11,7 @@ import { useSocket } from "@/components/providers/SocketProvider";
 type Message = {
   id: string;
   content: string;
-  sender: { id: string; name: string };
+  sender: { id: string; name: string; email?: string };
   channel: string;
   createdAt: string;
 };
@@ -122,7 +122,7 @@ export default function ChatPage() {
       const prev = messages[i - 1];
       const showAvatar =
         !prev ||
-        prev.sender.id !== msg.sender.id ||
+        (prev.sender.id !== msg.sender.id && prev.sender.email !== msg.sender.email) ||
         new Date(msg.createdAt).getTime() - new Date(prev.createdAt).getTime() > 5 * 60 * 1000;
       acc.push({ ...msg, showAvatar });
       return acc;
@@ -180,7 +180,7 @@ export default function ChatPage() {
             </div>
           ) : (
             grouped.map((msg) => {
-              const isMe = msg.sender.id === session?.user?.id;
+              const isMe = msg.sender.id === session?.user?.id || (!!session?.user?.email && msg.sender.email === session?.user?.email);
               return (
                 <div key={msg.id} className={cn("flex items-end gap-2 w-full", isMe ? "justify-end" : "justify-start", msg.showAvatar ? "mt-4" : "mt-1")}>
                   {!isMe && (
