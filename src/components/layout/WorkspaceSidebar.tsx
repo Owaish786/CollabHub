@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { InviteMembersModal } from "@/components/features/workspace/invite-members-modal";
+
 interface Props {
   workspaceId: string;
   workspaceName: string;
@@ -44,18 +46,24 @@ export function WorkspaceSidebar({
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
       {/* Workspace header */}
-      <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-4">
-        <div
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white"
-          style={{ backgroundColor: workspaceColor }}
-        >
-          {workspaceName[0]?.toUpperCase()}
+      <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-4">
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white"
+            style={{ backgroundColor: workspaceColor }}
+          >
+            {workspaceName[0]?.toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-[13px] font-semibold text-slate-900">
+              {workspaceName}
+            </p>
+            <p className="text-[11px] text-slate-400">Workspace</p>
+          </div>
         </div>
-        <div className="min-w-0">
-          <p className="truncate text-[13px] font-semibold text-slate-900">
-            {workspaceName}
-          </p>
-          <p className="text-[11px] text-slate-400">Workspace</p>
+        
+        <div className="px-1">
+          <InviteMembersModal workspaceId={workspaceId} />
         </div>
       </div>
 
