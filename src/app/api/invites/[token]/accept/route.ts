@@ -69,7 +69,7 @@ export async function POST(
 
     // Add user to workspace
     workspace.members.push({
-      user: new mongoose.Types.ObjectId(session.user.id) as any,
+      user: new mongoose.Types.ObjectId(session.user.id) as unknown as mongoose.Types.ObjectId,
       role: invite.role,
       joinedAt: new Date(),
     });
