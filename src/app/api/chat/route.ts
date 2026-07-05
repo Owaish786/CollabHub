@@ -5,6 +5,14 @@ import Message from "@/models/Message";
 import Workspace from "@/models/Workspace";
 import { sendMessageSchema } from "@/lib/validators";
 
+interface PopulatedUser {
+  _id?: { toString(): string };
+  id?: string;
+  name?: string;
+  email?: string;
+  image?: string;
+}
+
 /**
  * GET /api/chat?workspaceId=...&channel=general&before=<cursor>&limit=50
  * Returns paginated messages for a workspace channel (newest-first).
@@ -56,18 +64,26 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    data: messages.reverse().map((m) => ({
-      id: m._id.toString(),
-      workspace: m.workspace.toString(),
-      channel: m.channel,
-      sender: m.sender,
-      content: m.content,
-      attachments: m.attachments,
-      reactions: m.reactions,
-      replyTo: m.replyTo,
-      createdAt: m.createdAt,
-      updatedAt: m.updatedAt,
-    })),
+    data: messages.reverse().map((m) => {
+      const senderObj = m.sender as unknown as PopulatedUser;
+      return {
+        id: m._id.toString(),
+        workspace: m.workspace.toString(),
+        channel: m.channel,
+        sender: {
+          id: senderObj._id?.toString() || senderObj.id,
+          name: senderObj.name,
+          email: senderObj.email,
+          image: senderObj.image,
+        },
+        content: m.content,
+        attachments: m.attachments,
+        reactions: m.reactions,
+        replyTo: m.replyTo,
+        createdAt: m.createdAt,
+        updatedAt: m.updatedAt,
+      };
+    }),
     hasMore: messages.length === limit,
   });
 }
@@ -117,6 +133,7 @@ export async function POST(request: NextRequest) {
   });
 
   const populated = await message.populate("sender", "name email image");
+  const senderObj = populated.sender as unknown as PopulatedUser;
 
   return NextResponse.json(
     {
@@ -125,7 +142,12 @@ export async function POST(request: NextRequest) {
         id: populated._id.toString(),
         workspace: populated.workspace.toString(),
         channel: populated.channel,
-        sender: populated.sender,
+        sender: {
+          id: senderObj._id?.toString() || senderObj.id,
+          name: senderObj.name,
+          email: senderObj.email,
+          image: senderObj.image,
+        },
         content: populated.content,
         attachments: populated.attachments,
         reactions: populated.reactions,
