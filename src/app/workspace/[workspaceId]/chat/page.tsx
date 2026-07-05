@@ -182,28 +182,43 @@ export default function ChatPage() {
             grouped.map((msg) => {
               const isMe = msg.sender.id === session?.user?.id;
               return (
-                <div key={msg.id} className={cn("flex items-start gap-3", msg.showAvatar ? "mt-4" : "mt-0.5")}>
-                  {msg.showAvatar ? (
-                    <div className={cn(
-                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-bold",
-                      isMe ? "bg-indigo-600 text-white" : "bg-slate-200 text-slate-700"
-                    )}>
-                      {msg.sender.name?.[0]?.toUpperCase()}
-                    </div>
-                  ) : (
-                    <div className="w-8 shrink-0" />
+                <div key={msg.id} className={cn("flex items-end gap-2 w-full", isMe ? "justify-end" : "justify-start", msg.showAvatar ? "mt-4" : "mt-1")}>
+                  {!isMe && (
+                    msg.showAvatar ? (
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-bold bg-slate-200 text-slate-700">
+                        {msg.sender.name?.[0]?.toUpperCase()}
+                      </div>
+                    ) : (
+                      <div className="w-8 shrink-0" />
+                    )
                   )}
-                  <div className="min-w-0">
+                  <div className={cn("flex flex-col min-w-0 max-w-[75%]", isMe ? "items-end" : "items-start")}>
                     {msg.showAvatar && (
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-[13px] font-semibold text-slate-800">{msg.sender.name}</span>
-                        <span className="text-[11px] text-slate-400">
+                      <div className={cn("flex items-baseline gap-2 mb-1 px-1", isMe && "flex-row-reverse")}>
+                        <span className="text-[12px] font-semibold text-slate-700">{msg.sender.name}</span>
+                        <span className="text-[10px] text-slate-400">
                           {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
                         </span>
                       </div>
                     )}
-                    <p className="text-sm leading-relaxed text-slate-700 break-words">{msg.content}</p>
+                    <div className={cn(
+                      "rounded-2xl px-4 py-2", 
+                      isMe 
+                        ? "bg-indigo-600 text-white rounded-br-sm" 
+                        : "bg-white border border-slate-200 text-slate-800 rounded-bl-sm"
+                    )}>
+                      <p className="text-sm leading-relaxed break-words">{msg.content}</p>
+                    </div>
                   </div>
+                  {isMe && (
+                    msg.showAvatar ? (
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-bold bg-indigo-100 text-indigo-700">
+                        {msg.sender.name?.[0]?.toUpperCase()}
+                      </div>
+                    ) : (
+                      <div className="w-8 shrink-0" />
+                    )
+                  )}
                 </div>
               );
             })
