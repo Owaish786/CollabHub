@@ -25,6 +25,7 @@ export type Task = {
   deadline?: string;
   labels: string[];
   subtasks: Subtask[];
+  comments?: { _id?: string, text: string, createdAt: string, user?: { name: string, image?: string } }[];
   coverColor: string | null;
   order: number;
   createdBy: string;
@@ -49,12 +50,23 @@ export default function TasksPage() {
   const [priorityFilter, setPriorityFilter] = useState<Task["priority"] | null>(null);
   const [labelFilter, setLabelFilter] = useState<string | null>(null);
 
+  const [workspaceMembers, setWorkspaceMembers] = useState<{ id: string; name: string; email: string; image?: string }[]>([]);
+
   const fetchTasks = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/tasks?workspaceId=${params.workspaceId}`);
-      const data = await res.json();
-      if (data.success) setTasks(data.data ?? []);
+      const [tasksRes, workspaceRes] = await Promise.all([
+        fetch(`/api/tasks?workspaceId=${params.workspaceId}`),
+        fetch(`/api/workspaces/${params.workspaceId}`)
+      ]);
+      const tasksData = await tasksRes.json();
+      const workspaceData = await workspaceRes.json();
+      
+      if (tasksData.success) setTasks(tasksData.data ?? []);
+      
+      if (workspaceData.success && workspaceData.data) {
+        setWorkspaceMembers(workspaceData.data.members.map((m: { user: { id: string; name: string; email: string; image?: string } }) => m.user) || []);
+      }
     } finally {
       setLoading(false);
     }
@@ -310,6 +322,7 @@ export default function TasksPage() {
       {isCreateOpen && (
         <TaskModal
           mode="create"
+          workspaceMembers={workspaceMembers}
           onClose={() => setIsCreateOpen(false)}
           onSubmit={handleCreateTask}
         />
@@ -320,6 +333,7 @@ export default function TasksPage() {
         <TaskModal
           mode="edit"
           task={editingTask}
+          workspaceMembers={workspaceMembers}
           onClose={() => setEditingTask(null)}
           onSubmit={(values) => handleUpdateTask(editingTask.id, values)}
           onDelete={() => handleDeleteTask(editingTask.id)}

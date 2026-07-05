@@ -206,14 +206,42 @@ export function KanbanBoard({ tasks, allTasks, onReorder, onTaskClick, onNewTask
                                     )}
                                   </div>
 
-                                  {task.deadline && !deadlineStatus && (
-                                    <span className="text-[11px] text-slate-400">
-                                      {new Date(task.deadline).toLocaleDateString("en-US", {
-                                        month: "short",
-                                        day: "numeric",
-                                      })}
-                                    </span>
-                                  )}
+                                  <div className="flex items-center gap-1.5">
+                                    {task.assignees?.length > 0 && (
+                                      <div className="flex -space-x-1.5 mr-1">
+                                        {task.assignees.map((assignee: { id?: string; _id?: string; name?: string; image?: string } | string) => {
+                                          const a = typeof assignee === 'string' ? { id: assignee, name: "U" } : assignee;
+                                          return (
+                                          <div key={a._id || a.id || (typeof a === 'string' ? a : Math.random())} className="h-5 w-5 rounded-full border-2 border-white bg-slate-200 overflow-hidden shrink-0">
+                                            {a.image ? (
+                                              <img src={a.image} alt={a.name || 'Assignee'} className="h-full w-full object-cover" />
+                                            ) : (
+                                              <div className="flex h-full w-full items-center justify-center bg-indigo-100 text-[8px] font-bold text-indigo-700">
+                                                {(a.name || "A").charAt(0).toUpperCase()}
+                                              </div>
+                                            )}
+                                          </div>
+                                        )})}
+                                      </div>
+                                    )}
+
+                                    {task.deadline && !deadlineStatus && (
+                                      <span className="text-[11px] text-slate-400">
+                                        {new Date(task.deadline).toLocaleDateString("en-US", {
+                                          month: "short",
+                                          day: "numeric",
+                                        })}
+                                      </span>
+                                    )}
+                                    {(task.comments?.length ?? 0) > 0 && (
+                                      <div className="flex items-center gap-0.5 text-slate-400 text-[11px]">
+                                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                        </svg>
+                                        <span>{task.comments?.length}</span>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>

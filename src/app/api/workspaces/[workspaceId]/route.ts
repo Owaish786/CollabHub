@@ -7,14 +7,7 @@ import { updateWorkspaceSchema, inviteMemberSchema } from "@/lib/validators";
 
 type RouteContext = { params: Promise<{ workspaceId: string }> };
 
-async function getWorkspaceAndVerifyAccess(workspaceId: string, userId: string) {
-  await dbConnect();
-  const workspace = await Workspace.findOne({
-    _id: workspaceId,
-    $or: [{ owner: userId }, { "members.user": userId }],
-  });
-  return workspace;
-}
+
 
 export async function GET(_req: NextRequest, context: RouteContext) {
   const session = await auth();
@@ -23,7 +16,10 @@ export async function GET(_req: NextRequest, context: RouteContext) {
   }
 
   const { workspaceId } = await context.params;
-  const workspace = await getWorkspaceAndVerifyAccess(workspaceId, session.user.id);
+  const workspace = await Workspace.findOne({
+    _id: workspaceId,
+    $or: [{ owner: session.user.id }, { "members.user": session.user.id }],
+  }).populate("members.user", "name email image");
 
   if (!workspace) {
     return NextResponse.json({ success: false, error: "Workspace not found" }, { status: 404 });
@@ -37,8 +33,14 @@ export async function GET(_req: NextRequest, context: RouteContext) {
       slug: workspace.slug,
       description: workspace.description,
       owner: workspace.owner.toString(),
-      members: workspace.members.map((m) => ({
-        user: m.user.toString(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      members: workspace.members.map((m: any) => ({
+        user: {
+          id: m.user._id.toString(),
+          name: m.user.name,
+          email: m.user.email,
+          image: m.user.image,
+        },
         role: m.role,
         joinedAt: m.joinedAt,
       })),

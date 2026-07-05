@@ -11,6 +11,7 @@ import type { Task, Subtask } from "@/app/workspace/[workspaceId]/tasks/page";
 interface Props {
   mode: "create" | "edit";
   task?: Task;
+  workspaceMembers?: { id: string; name: string; email: string; image?: string }[];
   onClose: () => void;
   onSubmit: (values: Partial<Task>) => Promise<void>;
   onDelete?: () => Promise<void>;
@@ -37,14 +38,17 @@ const priorityColor: Record<string, string> = {
   urgent: "border-red-300 bg-red-50 text-red-700",
 };
 
-export function TaskModal({ mode, task, onClose, onSubmit, onDelete }: Props) {
+export function TaskModal({ mode, task, workspaceMembers = [], onClose, onSubmit, onDelete }: Props) {
   const [title, setTitle] = useState(task?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
   const [status, setStatus] = useState<Task["status"]>(task?.status ?? "todo");
   const [priority, setPriority] = useState<Task["priority"]>(task?.priority ?? "medium");
   const [deadline, setDeadline] = useState(task?.deadline ? task.deadline.slice(0, 10) : "");
+  const [assignees, setAssignees] = useState<string[]>(task?.assignees?.map(a => typeof a === 'string' ? a : (a as { _id?: string, id?: string })._id || (a as { _id?: string, id?: string }).id || "") ?? []);
   const [label, setLabel] = useState("");
   const [labels, setLabels] = useState<string[]>(task?.labels ?? []);
+  const [comments, setComments] = useState<{ _id?: string, text: string, createdAt: string, user?: { name: string, image?: string } }[]>(task?.comments ?? []);
+  const [newComment, setNewComment] = useState("");
   const [subtasks, setSubtasks] = useState<Subtask[]>(task?.subtasks ?? []);
   const [newSubtaskText, setNewSubtaskText] = useState("");
   const [coverColor, setCoverColor] = useState<string | null>(task?.coverColor ?? null);
@@ -72,6 +76,7 @@ export function TaskModal({ mode, task, onClose, onSubmit, onDelete }: Props) {
         priority,
         deadline: deadline || undefined,
         labels,
+        assignees,
         subtasks,
         coverColor,
       });
@@ -131,6 +136,24 @@ export function TaskModal({ mode, task, onClose, onSubmit, onDelete }: Props) {
       // silently fail
     } finally {
       setAiLoading(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim() || !task) return;
+    try {
+      const res = await fetch(`/api/tasks/${task.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: newComment.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setComments((prev) => [...prev, data.data]);
+        setNewComment("");
+      }
+    } catch {
+      // ignore
     }
   };
 
@@ -255,6 +278,44 @@ export function TaskModal({ mode, task, onClose, onSubmit, onDelete }: Props) {
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* Assignees */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium text-slate-700">Assignees</Label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {workspaceMembers.filter(m => assignees.includes(m.id)).map(member => (
+                <div key={member.id} className="flex items-center gap-1.5 rounded-full bg-slate-100 pl-1 pr-2 py-1 text-[11px] font-medium text-slate-700">
+                  {member.image ? (
+                    <img src={member.image} alt={member.name} className="h-4 w-4 rounded-full" />
+                  ) : (
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-indigo-100 text-[8px] font-bold text-indigo-700">
+                      {member.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  {member.name}
+                  <button type="button" onClick={() => setAssignees(prev => prev.filter(a => a !== member.id))} className="text-slate-400 hover:text-slate-700">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            
+            <select
+              value=""
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val && !assignees.includes(val)) {
+                  setAssignees(prev => [...prev, val]);
+                }
+              }}
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-indigo-400 focus:outline-none"
+            >
+              <option value="">Add assignee...</option>
+              {workspaceMembers.filter(m => !assignees.includes(m.id)).map(m => (
+                <option key={m.id} value={m.id}>{m.name} ({m.email})</option>
+              ))}
+            </select>
           </div>
 
           {/* Deadline */}
@@ -412,6 +473,58 @@ export function TaskModal({ mode, task, onClose, onSubmit, onDelete }: Props) {
               </div>
             )}
           </div>
+
+          {/* Comments Section (Edit Mode Only) */}
+          {mode === "edit" && task && (
+            <div className="space-y-3 pt-4 border-t border-slate-100">
+              <Label className="flex items-center gap-1.5 text-sm font-medium text-slate-700">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                Comments
+              </Label>
+              
+              <div className="space-y-4 mb-4 max-h-48 overflow-y-auto pr-2">
+                {comments.length === 0 ? (
+                  <p className="text-xs text-slate-400">No comments yet.</p>
+                ) : (
+                  comments.map((comment, i) => (
+                    <div key={comment._id || i} className="flex gap-2">
+                      <div className="h-6 w-6 shrink-0 rounded-full bg-slate-200 overflow-hidden">
+                        {comment.user?.image ? (
+                          <img src={comment.user.image} alt={comment.user.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-indigo-100 text-[10px] font-bold text-indigo-700">
+                            {(comment.user?.name || "U").charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 bg-slate-50 rounded-lg p-2.5">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[12px] font-semibold text-slate-700">{comment.user?.name}</span>
+                          <span className="text-[10px] text-slate-400">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <p className="text-sm text-slate-600 whitespace-pre-wrap">{comment.text}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <Input
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddComment(); } }}
+                  placeholder="Write a comment..."
+                  className="border-slate-200 focus:border-indigo-400 text-sm"
+                />
+                <Button type="button" size="sm" onClick={handleAddComment} disabled={!newComment.trim()} className="bg-slate-800 hover:bg-slate-900 text-white shrink-0">
+                  Post
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
           <div className="flex items-center justify-between border-t border-slate-100 pt-4">

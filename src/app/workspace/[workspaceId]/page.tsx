@@ -55,10 +55,10 @@ export default async function WorkspaceOverviewPage({ params }: Props) {
   const doneTasks = statusMap["done"] ?? 0;
 
   const quickLinks = [
-    { href: "tasks", label: "Tasks", icon: CheckSquare, color: "bg-rose-50 text-rose-600", count: totalTasks, sub: `${doneTasks} done` },
-    { href: "documents", label: "Documents", icon: FileText, color: "bg-blue-50 text-blue-600", count: recentDocs.length, sub: "recent" },
-    { href: "chat", label: "Chat", icon: MessageSquare, color: "bg-emerald-50 text-emerald-600", count: recentMessages.length, sub: "new messages" },
-    { href: "settings", label: "Members", icon: Users, color: "bg-violet-50 text-violet-600", count: ws.members.length, sub: "in workspace" },
+    { href: `/workspace/${workspaceId}/tasks`, label: "Tasks", icon: CheckSquare, color: "bg-rose-50 text-rose-600", count: totalTasks, sub: `${doneTasks} done` },
+    { href: `/workspace/${workspaceId}/documents`, label: "Documents", icon: FileText, color: "bg-blue-50 text-blue-600", count: recentDocs.length, sub: "recent" },
+    { href: `/workspace/${workspaceId}/chat`, label: "Chat", icon: MessageSquare, color: "bg-emerald-50 text-emerald-600", count: recentMessages.length, sub: "new messages" },
+    { href: `/workspace/${workspaceId}/settings`, label: "Members", icon: Users, color: "bg-violet-50 text-violet-600", count: ws.members.length, sub: "in workspace" },
   ];
 
   return (
@@ -100,7 +100,7 @@ export default async function WorkspaceOverviewPage({ params }: Props) {
         <div className="rounded-xl border border-slate-200 bg-white">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
             <h2 className="text-sm font-semibold text-slate-900">Recent Documents</h2>
-            <Link href="documents" className="text-xs font-medium text-indigo-600 hover:text-indigo-700">
+            <Link href={`/workspace/${workspaceId}/documents`} className="text-xs font-medium text-indigo-600 hover:text-indigo-700">
               View all
             </Link>
           </div>
@@ -109,7 +109,7 @@ export default async function WorkspaceOverviewPage({ params }: Props) {
               <div className="px-5 py-8 text-center">
                 <FileText className="mx-auto h-8 w-8 text-slate-300" />
                 <p className="mt-2 text-sm text-slate-400">No documents yet</p>
-                <Link href="documents" className="mt-2 inline-block text-xs font-medium text-indigo-600">
+                <Link href={`/workspace/${workspaceId}/documents`} className="mt-2 inline-block text-xs font-medium text-indigo-600">
                   Create one →
                 </Link>
               </div>
@@ -119,7 +119,7 @@ export default async function WorkspaceOverviewPage({ params }: Props) {
                 return (
                   <Link
                     key={d._id.toString()}
-                    href={`documents/${d._id.toString()}`}
+                    href={`/workspace/${workspaceId}/documents/${d._id.toString()}`}
                     className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 transition-colors"
                   >
                     <FileText className="h-4 w-4 shrink-0 text-slate-400" />
@@ -139,7 +139,7 @@ export default async function WorkspaceOverviewPage({ params }: Props) {
         <div className="rounded-xl border border-slate-200 bg-white">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
             <h2 className="text-sm font-semibold text-slate-900">Recent Messages</h2>
-            <Link href="chat" className="text-xs font-medium text-indigo-600 hover:text-indigo-700">
+            <Link href={`/workspace/${workspaceId}/chat`} className="text-xs font-medium text-indigo-600 hover:text-indigo-700">
               Open chat
             </Link>
           </div>
@@ -148,7 +148,7 @@ export default async function WorkspaceOverviewPage({ params }: Props) {
               <div className="px-5 py-8 text-center">
                 <MessageSquare className="mx-auto h-8 w-8 text-slate-300" />
                 <p className="mt-2 text-sm text-slate-400">No messages yet</p>
-                <Link href="chat" className="mt-2 inline-block text-xs font-medium text-indigo-600">
+                <Link href={`/workspace/${workspaceId}/chat`} className="mt-2 inline-block text-xs font-medium text-indigo-600">
                   Start chatting →
                 </Link>
               </div>
