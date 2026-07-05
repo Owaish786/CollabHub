@@ -183,6 +183,48 @@ export default function SettingsPage() {
             ))}
           </div>
         </div>
+
+        {/* Danger Zone */}
+        {isOwner && (
+          <div className="rounded-xl border border-red-200 bg-red-50/50 shadow-sm overflow-hidden mt-8">
+            <div className="border-b border-red-100 bg-red-100/50 px-6 py-4">
+              <h2 className="flex items-center gap-2 text-base font-semibold text-red-800">
+                Danger Zone
+              </h2>
+            </div>
+            <div className="p-6 flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-red-900">Delete Workspace</h3>
+                <p className="text-sm text-red-700/80 mt-1">
+                  Once you delete a workspace, there is no going back. Please be certain.
+                </p>
+              </div>
+              <Button 
+                variant="destructive" 
+                disabled={saving}
+                onClick={async () => {
+                  if (confirm("Are you sure you want to delete this workspace? All tasks, documents, and messages will be permanently removed.")) {
+                    setSaving(true);
+                    try {
+                      const res = await fetch(`/api/workspaces/${params.workspaceId}`, {
+                        method: "DELETE",
+                      });
+                      if (res.ok) {
+                        router.push("/dashboard");
+                        router.refresh();
+                      }
+                    } finally {
+                      setSaving(false);
+                    }
+                  }
+                }}
+              >
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Delete Workspace
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

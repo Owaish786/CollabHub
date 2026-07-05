@@ -1,8 +1,9 @@
+import mongoose from "mongoose";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import { redirect } from "next/navigation";
 import Workspace from "@/models/Workspace";
-import { WorkspaceSidebar } from "@/components/layout/WorkspaceSidebar";
+import { ClientWorkspaceLayout } from "@/components/layout/ClientWorkspaceLayout";
 import type { ReactNode } from "react";
 
 interface Props {
@@ -15,6 +16,10 @@ export default async function WorkspaceLayout({ children, params }: Props) {
   if (!session?.user) redirect("/login");
 
   const { workspaceId } = await params;
+
+  if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
+    redirect("/dashboard");
+  }
 
   await dbConnect();
 
@@ -33,15 +38,13 @@ export default async function WorkspaceLayout({ children, params }: Props) {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
-      <WorkspaceSidebar
-        workspaceId={workspaceId}
-        workspaceName={ws.name}
-        workspaceColor={ws.settings?.color ?? "#6366f1"}
-        userName={session.user.name ?? ""}
-        userEmail={session.user.email ?? ""}
-      />
-      <main className="flex-1 overflow-y-auto">{children}</main>
-    </div>
+    <ClientWorkspaceLayout
+      workspaceId={workspaceId}
+      ws={ws}
+      userName={session.user.name ?? ""}
+      userEmail={session.user.email ?? ""}
+    >
+      {children}
+    </ClientWorkspaceLayout>
   );
 }

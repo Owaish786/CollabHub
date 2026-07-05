@@ -128,13 +128,30 @@ export async function DELETE(_req: NextRequest, context: RouteContext) {
     );
   }
 
-  await Workspace.findByIdAndDelete(workspaceId);
+  try {
+    const Task = (await import("@/models/Task")).default;
+    const CollabDocument = (await import("@/models/Document")).default;
+    const Message = (await import("@/models/Message")).default;
+    const Invite = (await import("@/models/Invite")).default;
 
-  // Remove workspace from all members' user records
-  await User.updateMany(
-    { workspaces: workspace._id },
-    { $pull: { workspaces: workspace._id } }
-  );
+    await Promise.all([
+      Task.deleteMany({ workspace: workspaceId }),
+      CollabDocument.deleteMany({ workspace: workspaceId }),
+      Message.deleteMany({ workspace: workspaceId }),
+      Invite.deleteMany({ workspaceId }),
+      Workspace.findByIdAndDelete(workspaceId)
+    ]);
+
+    // Remove workspace from all members' user records
+    const userIds = workspace.members.map((m) => m.user);
+    await User.updateMany(
+      { _id: { $in: userIds } },
+      { $pull: { workspaces: workspace._id } }
+    );
+  } catch (error) {
+    console.error("Workspace deletion error:", error);
+    return NextResponse.json({ success: false, error: "Failed to delete workspace" }, { status: 500 });
+  }
 
   return NextResponse.json({ success: true, message: "Workspace deleted" });
 }

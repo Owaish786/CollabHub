@@ -23,6 +23,7 @@ interface Props {
   workspaceColor: string;
   userName: string;
   userEmail: string;
+  onCloseMobile?: () => void;
 }
 
 const navItems = [
@@ -39,6 +40,7 @@ export function WorkspaceSidebar({
   workspaceColor,
   userName,
   userEmail,
+  onCloseMobile,
 }: Props) {
   const pathname = usePathname();
   const base = `/workspace/${workspaceId}`;
@@ -80,6 +82,7 @@ export function WorkspaceSidebar({
             <Link
               key={item.label}
               href={href}
+              onClick={onCloseMobile}
               className={cn(
                 "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors",
                 isActive

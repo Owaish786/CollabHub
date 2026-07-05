@@ -7,3 +7,74 @@
 (Use `node --trace-deprecation ...` to show where the warning was created)
 ✓ Compiled in 604ms
 ✓ Compiled in 206ms
+ GET / 200 in 509ms (next.js: 140ms, proxy.ts: 180ms, application-code: 188ms)
+Client connected: x846JYqtsX3ECAEqAAAB
+ GET /api/auth/session 200 in 741ms (next.js: 723ms, proxy.ts: 5ms, application-code: 13ms)
+ GET /api/auth/session 200 in 7ms (next.js: 4ms, proxy.ts: 1871µs, application-code: 2ms)
+ GET /login 200 in 62ms (next.js: 34ms, proxy.ts: 10ms, application-code: 19ms)
+ GET /api/auth/providers 200 in 21ms (next.js: 6ms, proxy.ts: 12ms, application-code: 2ms)
+ GET /api/auth/providers 200 in 48ms (next.js: 8ms, proxy.ts: 7ms, application-code: 33ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET /api/auth/status 200 in 3.0s (next.js: 22ms, proxy.ts: 7ms, application-code: 3.0s)
+ GET /api/auth/status 200 in 3.0s (next.js: 40ms, proxy.ts: 12ms, application-code: 3.0s)
+ GET /login 200 in 76ms (next.js: 5ms, proxy.ts: 6ms, application-code: 66ms)
+Client disconnected: x846JYqtsX3ECAEqAAAB
+Client connected: TG01b_xV-AsIttV1AAAD
+ GET /api/auth/status 200 in 14ms (next.js: 6ms, proxy.ts: 6ms, application-code: 1899µs)
+ GET /api/auth/session 200 in 31ms (next.js: 11ms, proxy.ts: 14ms, application-code: 6ms)
+ GET /api/auth/providers 200 in 21ms (next.js: 11ms, proxy.ts: 7ms, application-code: 3ms)
+ GET /api/auth/session 200 in 12ms (next.js: 3ms, proxy.ts: 5ms, application-code: 3ms)
+ GET /api/auth/providers 200 in 14ms (next.js: 6ms, proxy.ts: 3ms, application-code: 4ms)
+ GET /api/auth/csrf 200 in 7ms (next.js: 2ms, proxy.ts: 3ms, application-code: 2ms)
+ POST /api/auth/signin/google? 200 in 308ms (next.js: 3ms, proxy.ts: 12ms, application-code: 293ms)
+Client disconnected: TG01b_xV-AsIttV1AAAD
+(node:5100) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+SMTP configuration is missing. Skipping email notification.
+ GET /api/auth/callback/google?iss=https%3A%2F%2Faccounts.google.com&code=4%2F0AdkVLPzsYpPImmW0dM7COJ-0QYPmu3FT-WGx7qg2A5SYuRAmuRYG8NRV5Fp-RH2FLUzj9w&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&authuser=0&prompt=none 302 in 1487ms (next.js: 8ms, proxy.ts: 5ms, application-code: 1474ms)
+ GET /dashboard 200 in 2.0s (next.js: 82ms, proxy.ts: 13ms, application-code: 1953ms)
+Client connected: fyuQJJuMJKP_3MyfAAAF
+ GET /api/auth/session 200 in 23ms (next.js: 12ms, proxy.ts: 6ms, application-code: 5ms)
+ GET /api/auth/session 200 in 20ms (next.js: 7ms, proxy.ts: 8ms, application-code: 5ms)
+ GET /workspace/6a49608e0157e5cc9206fb64 200 in 3.1s (next.js: 855ms, proxy.ts: 4ms, application-code: 2.2s)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET /workspace/6a49608e0157e5cc9206fb64 200 in 5.7s (next.js: 2.0s, proxy.ts: 11ms, application-code: 3.6s)
+⨯ CastError: Cast to ObjectId failed for value "chat" (type string) at path "_id" for model "Workspace"
+    at async WorkspaceLayout (file:/Users/mohamadowaishkhalak/Developer/CollabHub/src/app/workspace/%5BworkspaceId%5D/layout.tsx:21:21)
+  19 |   await dbConnect();
+  20 |
+> 21 |   const workspace = await Workspace.findOne({
+     |                     ^
+  22 |     _id: workspaceId,
+  23 |     $or: [{ owner: session.user.id }, { "members.user": session.user.id }],
+  24 |   }).lean(); {
+  stringValue: '"chat"',
+  messageFormat: undefined,
+  kind: 'ObjectId',
+  value: 'chat',
+  path: '_id',
+  reason: BSONError: input must be a 24 character hex string, 12 byte Uint8Array, or an integer
+      at async WorkspaceLayout (file:/Users/mohamadowaishkhalak/Developer/CollabHub/src/app/workspace/%5BworkspaceId%5D/layout.tsx:21:21)
+    19 |   await dbConnect();
+    20 |
+  > 21 |   const workspace = await Workspace.findOne({
+       |                     ^
+    22 |     _id: workspaceId,
+    23 |     $or: [{ owner: session.user.id }, { "members.user": session.user.id }],
+    24 |   }).lean();,
+  valueType: 'string',
+  digest: '1209585783'
+}
+⨯ BSONError: input must be a 24 character hex string, 12 byte Uint8Array, or an integer
+    at WorkspaceOverviewPage (file:/Users/mohamadowaishkhalak/Developer/CollabHub/src/app/workspace/%5BworkspaceId%5D/page.tsx:27:30)
+  25 |     Workspace.findById(workspaceId).populate("members.user", "name email").lean(),
+  26 |     Task.aggregate([
+> 27 |       { $match: { workspace: new mongoose.Types.ObjectId(workspaceId) } },
+     |                              ^
+  28 |       { $group: { _id: "$status", count: { $sum: 1 } } },
+  29 |     ]),
+  30 |     CollabDocument.find({ workspace: workspaceId }) {
+  digest: '3752823431'
+}
+ GET /workspace/chat 200 in 157ms (next.js: 4ms, proxy.ts: 5ms, application-code: 148ms)
+Client disconnected: fyuQJJuMJKP_3MyfAAAF
+[browser] Uncaught CastError: Cast to ObjectId failed for value "chat" (type string) at path "_id" for model "Workspace"
