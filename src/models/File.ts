@@ -7,7 +7,7 @@ export interface IFile extends Document {
   size: number;
   workspace: Types.ObjectId;
   uploadedBy: Types.ObjectId;
-  gridFsId: Types.ObjectId;
+  s3Key: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,7 +20,7 @@ const FileSchema = new Schema<IFile>(
     size: { type: Number, required: true },
     workspace: { type: Schema.Types.ObjectId, ref: "Workspace", required: true },
     uploadedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    gridFsId: { type: Schema.Types.ObjectId, required: true },
+    s3Key: { type: String, required: true },
   },
   { timestamps: true }
 );

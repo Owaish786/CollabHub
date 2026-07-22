@@ -4,7 +4,16 @@ import dbConnect from "@/lib/db";
 import FileModel from "@/models/File";
 import Workspace from "@/models/Workspace";
 import mongoose from "mongoose";
-import { GridFSBucket, ObjectId } from "mongodb";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+
+// Configure S3 Client
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION || "us-east-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+  },
+});
 
 export async function GET(
   request: NextRequest,
@@ -26,7 +35,7 @@ export async function GET(
     // Find the file metadata
     const fileDoc = await FileModel.findById(fileId).lean();
     if (!fileDoc) {
-      return new NextResponse("File not found", { status: 404 });
+      return new NextResponse("File not found in database", { status: 404 });
     }
 
     // Verify workspace access
@@ -39,28 +48,32 @@ export async function GET(
       return new NextResponse("Forbidden", { status: 403 });
     }
 
-    const db = mongoose.connection.db;
-    if (!db) {
-       throw new Error("Database connection not established");
+    const bucketName = process.env.AWS_S3_BUCKET_NAME;
+    if (!bucketName) {
+      return new NextResponse("AWS_S3_BUCKET_NAME is not configured", { status: 500 });
     }
 
-    const bucket = new GridFSBucket(db, { bucketName: "workspaceFiles" });
+    // Fetch from S3
+    const s3Response = await s3Client.send(
+      new GetObjectCommand({
+        Bucket: bucketName,
+        Key: fileDoc.s3Key,
+      })
+    );
 
-    // Ensure the file exists in GridFS
-    const files = await bucket.find({ _id: new ObjectId(fileDoc.gridFsId as any) }).toArray();
-    if (files.length === 0) {
-      return new NextResponse("File not found in storage", { status: 404 });
+    if (!s3Response.Body) {
+      return new NextResponse("File not found in S3", { status: 404 });
     }
 
-    // Create a readable stream
-    const downloadStream = bucket.openDownloadStream(new ObjectId(fileDoc.gridFsId as any));
+    // The S3 SDK returns a stream (in Node.js, it's a Readable stream)
+    // We can cast it to any and then transform it to a Web ReadableStream
+    const nodeStream = s3Response.Body as any;
 
-    // Convert the Node.js readable stream into a Web ReadableStream
     const stream = new ReadableStream({
       start(controller) {
-        downloadStream.on("data", (chunk) => controller.enqueue(chunk));
-        downloadStream.on("end", () => controller.close());
-        downloadStream.on("error", (error) => controller.error(error));
+        nodeStream.on("data", (chunk: Buffer) => controller.enqueue(chunk));
+        nodeStream.on("end", () => controller.close());
+        nodeStream.on("error", (error: Error) => controller.error(error));
       },
     });
 
@@ -72,13 +85,16 @@ export async function GET(
     return new NextResponse(stream, {
       headers: {
         "Content-Type": fileDoc.mimeType,
-        "Content-Length": fileDoc.size.toString(),
+        "Content-Length": s3Response.ContentLength?.toString() || fileDoc.size.toString(),
         "Content-Disposition": disposition,
         "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
   } catch (error: any) {
-    console.error("Error serving file:", error);
+    console.error("Error serving file from S3:", error);
+    if (error.name === "NoSuchKey") {
+       return new NextResponse("File missing from S3 bucket", { status: 404 });
+    }
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

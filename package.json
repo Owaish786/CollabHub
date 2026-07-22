@@ -12,6 +12,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1093.0",
     "@base-ui/react": "^1.6.0",
     "@hello-pangea/dnd": "^18.0.1",
     "@tiptap/extension-character-count": "^3.27.1",
