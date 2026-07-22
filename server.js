@@ -142,7 +142,13 @@ app.prepare().then(() => {
     // Handle task updates (create, update, delete, reorder)
     socket.on("tasks-updated", (data) => {
       const room = `workspace-${data.workspaceId}`;
-      socket.to(room).emit("tasks-updated", data.tasks);
+      socket.to(room).emit("tasks-updated", data.tasks); // can be full list or single
+    });
+
+    // Handle new file uploads
+    socket.on("file-uploaded", (data) => {
+      const room = `workspace-${data.workspaceId}`;
+      socket.to(room).emit("new-file", data.file);
     });
 
     socket.on("disconnect", () => {
