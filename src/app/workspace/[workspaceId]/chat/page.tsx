@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Hash, Send, Loader2, SmilePlus } from "lucide-react";
+import { Hash, Send, Loader2, SmilePlus, Bot, BarChart3, Sparkles } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useSocket } from "@/components/providers/SocketProvider";
@@ -30,6 +30,9 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
+  const [ghostLoading, setGhostLoading] = useState(false);
+  const [digestLoading, setDigestLoading] = useState(false);
+  const [ghostResult, setGhostResult] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { socket, isConnected } = useSocket();
@@ -116,6 +119,57 @@ export default function ChatPage() {
     }
   };
 
+  // Ghost AI — analyze conversation
+  const triggerGhostAI = async () => {
+    if (ghostLoading) return;
+    setGhostLoading(true);
+    setGhostResult(null);
+    try {
+      const res = await fetch("/api/ai/ghost", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workspaceId: params.workspaceId, channel }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const count = data.actions?.length ?? 0;
+        setGhostResult(
+          count > 0
+            ? `🤖 Created ${count} task${count > 1 ? "s" : ""} on your Kanban board!`
+            : "🤖 No actionable tasks found in recent conversation."
+        );
+        // Refresh messages to show the Ghost AI summary message
+        await fetchMessages(channel);
+      } else {
+        setGhostResult(`⚠️ ${data.error || "Failed to analyze"}`);
+      }
+    } catch {
+      setGhostResult("⚠️ Something went wrong.");
+    } finally {
+      setGhostLoading(false);
+      setTimeout(() => setGhostResult(null), 6000);
+    }
+  };
+
+  // Weekly Digest
+  const triggerDigest = async () => {
+    if (digestLoading) return;
+    setDigestLoading(true);
+    try {
+      const res = await fetch("/api/ai/digest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workspaceId: params.workspaceId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchMessages(channel);
+      }
+    } finally {
+      setDigestLoading(false);
+    }
+  };
+
   // Group messages by sender + time proximity
   const grouped = messages.reduce<Array<Message & { showAvatar: boolean }>>(
     (acc, msg, i) => {
@@ -129,6 +183,10 @@ export default function ChatPage() {
     },
     []
   );
+
+  // Detect Ghost AI messages
+  const isGhostMessage = (content: string) =>
+    content.startsWith("🤖 **Ghost AI**") || content.startsWith("📊 **Weekly Digest");
 
   return (
     <div className="flex h-full">
@@ -154,15 +212,56 @@ export default function ChatPage() {
             </button>
           ))}
         </div>
+
+        {/* Ghost AI section */}
+        <div className="border-t border-slate-200 p-3 space-y-1.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 px-1">
+            <Sparkles className="h-3 w-3 inline mr-1" />
+            AI Tools
+          </p>
+          <button
+            onClick={() => void triggerGhostAI()}
+            disabled={ghostLoading}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-medium text-violet-700 bg-violet-50 hover:bg-violet-100 transition-colors disabled:opacity-50"
+          >
+            {ghostLoading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Bot className="h-3.5 w-3.5" />
+            )}
+            {ghostLoading ? "Analyzing..." : "Ghost AI Scan"}
+          </button>
+          <button
+            onClick={() => void triggerDigest()}
+            disabled={digestLoading}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors disabled:opacity-50"
+          >
+            {digestLoading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <BarChart3 className="h-3.5 w-3.5" />
+            )}
+            {digestLoading ? "Generating..." : "Weekly Digest"}
+          </button>
+        </div>
       </div>
 
       {/* Chat area */}
       <div className="flex flex-1 flex-col">
         {/* Header */}
-        <div className="flex items-center gap-2 border-b border-slate-200 bg-white px-5 py-4">
-          <Hash className="h-5 w-5 text-slate-400" />
-          <h1 className="text-base font-semibold text-slate-900">{channel}</h1>
+        <div className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4">
+          <div className="flex items-center gap-2">
+            <Hash className="h-5 w-5 text-slate-400" />
+            <h1 className="text-base font-semibold text-slate-900">{channel}</h1>
+          </div>
         </div>
+
+        {/* Ghost AI result banner */}
+        {ghostResult && (
+          <div className="mx-5 mt-3 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm text-violet-800 animate-in fade-in slide-in-from-top-2 duration-300">
+            {ghostResult}
+          </div>
+        )}
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-1">
@@ -181,6 +280,28 @@ export default function ChatPage() {
           ) : (
             grouped.map((msg) => {
               const isMe = msg.sender.id === session?.user?.id || (!!session?.user?.email && msg.sender.email === session?.user?.email);
+              const isGhost = isGhostMessage(msg.content);
+              
+              // Ghost AI messages get a special treatment
+              if (isGhost) {
+                return (
+                  <div key={msg.id} className="my-4 mx-auto max-w-lg">
+                    <div className="rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-indigo-50 p-4 shadow-sm">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-600">
+                          <Bot className="h-3.5 w-3.5 text-white" />
+                        </div>
+                        <span className="text-[12px] font-bold text-violet-700">Ghost AI</span>
+                        <span className="text-[10px] text-slate-400">
+                          {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
+                        </span>
+                      </div>
+                      <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">{msg.content}</p>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div key={msg.id} className={cn("flex items-end gap-2 w-full", isMe ? "justify-end" : "justify-start", msg.showAvatar ? "mt-4" : "mt-1")}>
                   {!isMe && (

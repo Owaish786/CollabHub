@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { WorkspaceSidebar } from "@/components/layout/WorkspaceSidebar";
+import { CursorOverlay } from "@/components/features/presence/CursorOverlay";
+import { PresenceBar } from "@/components/features/presence/PresenceBar";
+import { usePresence } from "@/hooks/usePresence";
 import { Menu, X } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -20,9 +24,40 @@ interface Props {
 
 export function ClientWorkspaceLayout({ children, workspaceId, ws, userName, userEmail }: Props) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: session } = useSession();
+
+  const user = session?.user
+    ? {
+        id: session.user.id ?? "",
+        name: session.user.name ?? userName,
+        email: session.user.email ?? userEmail,
+        image: session.user.image ?? undefined,
+      }
+    : null;
+
+  const { peers, cursors, broadcastCursor } = usePresence({
+    workspaceId,
+    user,
+  });
+
+  // Track mouse movement for cursor broadcasting
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      broadcastCursor(e.clientX, e.clientY);
+    },
+    [broadcastCursor]
+  );
+
+  useEffect(() => {
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [handleMouseMove]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 relative">
+      {/* Live Cursors overlay */}
+      <CursorOverlay cursors={cursors} />
+
       {/* Mobile header */}
       <div className="md:hidden absolute top-0 left-0 w-full h-14 bg-white border-b border-slate-200 z-40 flex items-center px-4 justify-between">
         <div className="flex items-center gap-2">
@@ -66,7 +101,12 @@ export function ClientWorkspaceLayout({ children, workspaceId, ws, userName, use
         />
       </div>
 
-      <main className="flex-1 overflow-y-auto md:pt-0 pt-14 w-full relative">{children}</main>
+      <main className="flex-1 overflow-y-auto md:pt-0 pt-14 w-full relative flex flex-col">
+        {/* Presence bar — shows who is online */}
+        <PresenceBar peers={peers} />
+        {/* Page content */}
+        <div className="flex-1 overflow-y-auto">{children}</div>
+      </main>
     </div>
   );
 }
