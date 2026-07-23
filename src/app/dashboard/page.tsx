@@ -35,7 +35,7 @@ export default async function DashboardPage() {
   return (
     <div className="mesh-gradient min-h-screen">
       {/* Top Bar */}
-      <header className="glass fixed top-0 z-50 w-full">
+      <header className="nav-frosted fixed top-0 z-50 w-full">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
           <Link href="/dashboard" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
@@ -109,7 +109,7 @@ export default async function DashboardPage() {
           ].map((item) => (
             <Card
               key={item.title}
-              className="glass-card group cursor-pointer border-0 transition-all duration-300 hover:-translate-y-1"
+              className="card-feature group cursor-pointer border-0"
             >
               <CardHeader className="pb-3">
                 <div
@@ -130,7 +130,7 @@ export default async function DashboardPage() {
         <div className="animate-fade-up mt-12" style={{ animationDelay: "0.3s" }}>
           <h2 className="mb-4 text-xl font-semibold">Your Workspaces</h2>
           {workspaces.length === 0 ? (
-            <div className="glass-card flex flex-col items-center justify-center rounded-2xl p-12 text-center">
+            <div className="card-professional flex flex-col items-center justify-center p-12 text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
                 <Plus className="h-8 w-8 text-primary" />
               </div>
@@ -146,7 +146,7 @@ export default async function DashboardPage() {
 
                 return (
                   <Link key={workspace._id.toString()} href={`/workspace/${workspace._id.toString()}`}>
-                    <Card className="glass-card border-0 transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer">
+                    <Card className="card-professional border-0 cursor-pointer">
                       <CardHeader className="pb-3">
                         <div className="mb-2 flex items-center justify-between gap-3">
                           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
