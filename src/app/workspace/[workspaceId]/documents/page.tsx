@@ -53,7 +53,7 @@ export default async function DocumentsPage({ params }: Props) {
               return (
                 <Link
                   key={d._id.toString()}
-                  href={`${d._id.toString()}`}
+                  href={`/workspace/${workspaceId}/documents/${d._id.toString()}`}
                   className="group flex flex-col rounded-xl border border-slate-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
