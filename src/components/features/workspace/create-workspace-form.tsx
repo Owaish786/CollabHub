@@ -61,7 +61,7 @@ export function CreateWorkspaceForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="glass-card rounded-2xl border border-border/50 p-5"
+      className="card-professional rounded-2xl border border-border/50 p-5"
     >
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>

@@ -1,0 +1,509 @@
+/* ============================================
+   Dashboard — Premium Design System
+   ============================================ */
+
+/* ── Feature Color Tokens ── */
+:root {
+  --feature-violet: oklch(0.55 0.22 280);
+  --feature-violet-bg: oklch(0.55 0.22 280 / 12%);
+  --feature-blue: oklch(0.55 0.2 250);
+  --feature-blue-bg: oklch(0.55 0.2 250 / 12%);
+  --feature-rose: oklch(0.6 0.2 15);
+  --feature-rose-bg: oklch(0.6 0.2 15 / 12%);
+  --feature-emerald: oklch(0.6 0.18 155);
+  --feature-emerald-bg: oklch(0.6 0.18 155 / 12%);
+  --feature-amber: oklch(0.7 0.16 75);
+  --feature-amber-bg: oklch(0.7 0.16 75 / 12%);
+  --feature-cyan: oklch(0.6 0.15 210);
+  --feature-cyan-bg: oklch(0.6 0.15 210 / 12%);
+}
+
+/* ── Page container ── */
+.dashboard-page {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  background: oklch(0.985 0.003 265);
+}
+
+/* ── Ambient background orbs ── */
+.dashboard-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.dashboard-bg__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.4;
+  animation: float 20s ease-in-out infinite;
+}
+
+.dashboard-bg__orb--1 {
+  width: 600px;
+  height: 600px;
+  background: oklch(0.7 0.15 264 / 25%);
+  top: -200px;
+  right: -100px;
+  animation-delay: 0s;
+}
+
+.dashboard-bg__orb--2 {
+  width: 500px;
+  height: 500px;
+  background: oklch(0.7 0.12 300 / 20%);
+  bottom: -150px;
+  left: -100px;
+  animation-delay: -7s;
+}
+
+.dashboard-bg__orb--3 {
+  width: 400px;
+  height: 400px;
+  background: oklch(0.75 0.1 200 / 18%);
+  top: 40%;
+  left: 50%;
+  animation-delay: -14s;
+}
+
+/* ── Header ── */
+.dashboard-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: oklch(1 0 0 / 80%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid oklch(0.92 0.005 265 / 80%);
+}
+
+.dashboard-header__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+}
+
+.dashboard-header__right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dashboard-profile-link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 99px;
+  transition: background 0.2s ease;
+  text-decoration: none;
+}
+
+.dashboard-profile-link:hover {
+  background: oklch(0.95 0.005 265);
+}
+
+/* ── Logo ── */
+.dashboard-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  text-decoration: none;
+}
+
+.dashboard-logo__icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, oklch(0.51 0.24 264), oklch(0.48 0.26 280));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px oklch(0.51 0.24 264 / 30%);
+}
+
+.dashboard-logo__icon span {
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.dashboard-logo__text {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: oklch(0.2 0.02 265);
+  letter-spacing: -0.02em;
+}
+
+/* ── Avatar ── */
+.dashboard-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, oklch(0.51 0.24 264), oklch(0.52 0.22 300));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.dashboard-username {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: oklch(0.4 0.01 265);
+}
+
+/* ── Main ── */
+.dashboard-main {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 6rem 1.5rem 4rem;
+}
+
+/* ── Hero Section ── */
+.dashboard-hero {
+  padding: 2rem 0 1rem;
+  animation: fade-up 0.5s ease both;
+}
+
+.dashboard-hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3rem 0.875rem;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: oklch(0.51 0.24 264 / 10%);
+  color: oklch(0.44 0.22 264);
+  border: 1px solid oklch(0.51 0.24 264 / 15%);
+  margin-bottom: 1rem;
+}
+
+.dashboard-hero__badge-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.dashboard-hero__title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
+  color: oklch(0.15 0.02 265);
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.dashboard-hero__subtitle {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  color: oklch(0.5 0.01 265);
+  max-width: 520px;
+  line-height: 1.6;
+}
+
+/* ── Sections ── */
+.dashboard-section {
+  margin-top: 2.5rem;
+  animation: fade-up 0.5s ease both;
+}
+
+.dashboard-section__header {
+  margin-bottom: 1.25rem;
+}
+
+.dashboard-section__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: oklch(0.18 0.02 265);
+  letter-spacing: -0.015em;
+}
+
+.dashboard-section__subtitle {
+  font-size: 0.85rem;
+  color: oklch(0.52 0.01 265);
+  margin-top: 0.2rem;
+}
+
+/* ── Feature Cards Grid ── */
+.dashboard-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.dashboard-feature-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: oklch(1 0 0 / 90%);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.92 0.005 265);
+  border-radius: 1rem;
+  transition: all 0.25s ease;
+  overflow: hidden;
+  cursor: default;
+}
+
+.dashboard-feature-card:hover {
+  border-color: oklch(0.85 0.03 265);
+  box-shadow:
+    0 4px 16px oklch(0 0 0 / 5%),
+    0 1px 4px oklch(0 0 0 / 3%);
+  transform: translateY(-2px);
+}
+
+.dashboard-feature-card__icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease;
+}
+
+.dashboard-feature-card:hover .dashboard-feature-card__icon {
+  transform: scale(1.08);
+}
+
+.dashboard-feature-card__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-feature-card__title {
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: oklch(0.2 0.02 265);
+  margin-bottom: 0.25rem;
+}
+
+.dashboard-feature-card__desc {
+  font-size: 0.8rem;
+  color: oklch(0.5 0.01 265);
+  line-height: 1.5;
+}
+
+.dashboard-feature-card__accent {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.dashboard-feature-card:hover .dashboard-feature-card__accent {
+  opacity: 0.6;
+}
+
+/* ── Workspace Cards Grid ── */
+.dashboard-workspaces-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.dashboard-workspace-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  background: oklch(1 0 0 / 92%);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.92 0.005 265);
+  border-radius: 1rem;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+
+.dashboard-workspace-card:hover {
+  border-color: oklch(0.85 0.03 265);
+  box-shadow:
+    0 8px 32px oklch(0 0 0 / 6%),
+    0 2px 8px oklch(0 0 0 / 3%);
+  transform: translateY(-3px);
+}
+
+.dashboard-workspace-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.dashboard-workspace-card__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px oklch(0 0 0 / 15%);
+}
+
+.dashboard-workspace-card__badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.25rem 0.625rem;
+  border-radius: 99px;
+}
+
+.dashboard-workspace-card__badge--owner {
+  background: oklch(0.51 0.24 264 / 10%);
+  color: oklch(0.44 0.22 264);
+  border: 1px solid oklch(0.51 0.24 264 / 20%);
+}
+
+.dashboard-workspace-card__badge--member {
+  background: oklch(0.6 0.18 155 / 10%);
+  color: oklch(0.45 0.15 155);
+  border: 1px solid oklch(0.6 0.18 155 / 20%);
+}
+
+.dashboard-workspace-card__name {
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: oklch(0.18 0.02 265);
+  letter-spacing: -0.01em;
+  margin-bottom: 0.375rem;
+}
+
+.dashboard-workspace-card__desc {
+  font-size: 0.82rem;
+  color: oklch(0.5 0.01 265);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.dashboard-workspace-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid oklch(0.94 0.005 265);
+}
+
+.dashboard-workspace-card__members {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.78rem;
+  color: oklch(0.52 0.01 265);
+}
+
+.dashboard-workspace-card__arrow {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: oklch(0.96 0.005 265);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: oklch(0.5 0.01 265);
+  transition: all 0.2s ease;
+}
+
+.dashboard-workspace-card:hover .dashboard-workspace-card__arrow {
+  background: oklch(0.51 0.24 264);
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.dashboard-workspace-card__glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.dashboard-workspace-card:hover .dashboard-workspace-card__glow {
+  opacity: 0.7;
+}
+
+/* ── Empty state ── */
+.dashboard-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background: oklch(1 0 0 / 80%);
+  border: 2px dashed oklch(0.9 0.01 265);
+  border-radius: 1.25rem;
+  text-align: center;
+}
+
+.dashboard-empty__icon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 1rem;
+  background: oklch(0.51 0.24 264 / 8%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: oklch(0.51 0.24 264);
+  margin-bottom: 1.25rem;
+}
+
+.dashboard-empty__title {
+  font-size: 1.1rem;
+  font-weight: 650;
+  color: oklch(0.2 0.02 265);
+}
+
+.dashboard-empty__desc {
+  font-size: 0.85rem;
+  color: oklch(0.52 0.01 265);
+  margin-top: 0.5rem;
+  max-width: 320px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .dashboard-features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-workspaces-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-header__inner {
+    padding: 0.75rem 1rem;
+  }
+
+  .dashboard-main {
+    padding: 5.5rem 1rem 3rem;
+  }
+
+  .dashboard-username {
+    display: none;
+  }
+}

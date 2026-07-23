@@ -1,3 +1,4 @@
+import "./dashboard.css";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import { redirect } from "next/navigation";
@@ -5,13 +6,16 @@ import Link from "next/link";
 import Workspace from "@/models/Workspace";
 import { CreateWorkspaceForm } from "@/components/features/workspace/create-workspace-form";
 import { SignOutButton } from "@/components/features/auth/sign-out-button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Plus,
   FileText,
   LayoutDashboard,
   CheckSquare,
   MessageSquare,
+  Users,
+  ArrowRight,
+  Zap,
+  HardDrive,
 } from "lucide-react";
 
 export default async function DashboardPage() {
@@ -32,148 +36,222 @@ export default async function DashboardPage() {
     .sort({ updatedAt: -1 })
     .limit(6);
 
+  const firstName = session.user.name?.split(" ")[0] || "there";
+
+  const features = [
+    {
+      icon: LayoutDashboard,
+      title: "Kanban Boards",
+      desc: "Visual drag-and-drop task management with real-time sync across your team.",
+      color: "var(--feature-violet)",
+      colorBg: "var(--feature-violet-bg)",
+    },
+    {
+      icon: FileText,
+      title: "Live Documents",
+      desc: "Collaborative rich-text editing with presence indicators and version history.",
+      color: "var(--feature-blue)",
+      colorBg: "var(--feature-blue-bg)",
+    },
+    {
+      icon: CheckSquare,
+      title: "Smart Tasks",
+      desc: "AI-powered task breakdown, assignments, priorities, and deadline tracking.",
+      color: "var(--feature-rose)",
+      colorBg: "var(--feature-rose-bg)",
+    },
+    {
+      icon: MessageSquare,
+      title: "Team Chat",
+      desc: "Real-time workspace messaging with channels and threaded conversations.",
+      color: "var(--feature-emerald)",
+      colorBg: "var(--feature-emerald-bg)",
+    },
+    {
+      icon: HardDrive,
+      title: "Cloud Drive",
+      desc: "Securely upload, organize, and share files with your team via AWS S3.",
+      color: "var(--feature-amber)",
+      colorBg: "var(--feature-amber-bg)",
+    },
+    {
+      icon: Zap,
+      title: "Ghost AI",
+      desc: "AI project manager that auto-generates tasks, digests, and insights for you.",
+      color: "var(--feature-cyan)",
+      colorBg: "var(--feature-cyan-bg)",
+    },
+  ];
+
+  const workspaceColors = [
+    "var(--feature-violet)",
+    "var(--feature-blue)",
+    "var(--feature-rose)",
+    "var(--feature-emerald)",
+    "var(--feature-amber)",
+    "var(--feature-cyan)",
+  ];
+
   return (
-    <div className="mesh-gradient min-h-screen">
-      {/* Top Bar */}
-      <header className="nav-frosted fixed top-0 z-50 w-full">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <span className="text-sm font-bold text-primary-foreground">C</span>
+    <div className="dashboard-page">
+      {/* ── Ambient background ── */}
+      <div className="dashboard-bg" aria-hidden="true">
+        <div className="dashboard-bg__orb dashboard-bg__orb--1" />
+        <div className="dashboard-bg__orb dashboard-bg__orb--2" />
+        <div className="dashboard-bg__orb dashboard-bg__orb--3" />
+      </div>
+
+      {/* ── Header ── */}
+      <header className="dashboard-header">
+        <div className="dashboard-header__inner">
+          <Link href="/dashboard" className="dashboard-logo">
+            <div className="dashboard-logo__icon">
+              <span>C</span>
             </div>
-            <span className="text-lg font-bold">
+            <span className="dashboard-logo__text">
               Collab<span className="gradient-text">Hub</span>
             </span>
           </Link>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">
-              Welcome, {session.user.name}
-            </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
-              {session.user.name?.[0]?.toUpperCase() || "U"}
-            </div>
+
+          <div className="dashboard-header__right">
+            <Link href="/profile" className="dashboard-profile-link">
+              <div className="dashboard-avatar">
+                {session.user.name?.[0]?.toUpperCase() || "U"}
+              </div>
+              <span className="dashboard-username">{session.user.name}</span>
+            </Link>
             <SignOutButton />
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-6 pt-24 pb-12">
-        <div className="animate-fade-up">
-          <h1 className="text-3xl font-bold">
-            Good {getTimeOfDay()},{" "}
-            <span className="gradient-text">
-              {session.user.name?.split(" ")[0]}
-            </span>
+      {/* ── Main Content ── */}
+      <main className="dashboard-main">
+
+        {/* Hero greeting */}
+        <section className="dashboard-hero">
+          <div className="dashboard-hero__badge">
+            <Zap className="dashboard-hero__badge-icon" />
+            <span>Dashboard</span>
+          </div>
+          <h1 className="dashboard-hero__title">
+            Good {getTimeOfDay()}, <span className="gradient-text">{firstName}</span>
           </h1>
-          <p className="mt-2 text-muted-foreground">
-            Here&apos;s what&apos;s happening in your workspaces.
+          <p className="dashboard-hero__subtitle">
+            Here&apos;s an overview of your workspaces and tools. Jump in and start collaborating.
           </p>
-        </div>
+        </section>
 
-        {/* Quick Actions */}
-        <div className="animate-fade-up mt-8" style={{ animationDelay: "0.1s" }}>
+        {/* Quick workspace creation */}
+        <section className="dashboard-section" style={{ animationDelay: "0.1s" }}>
           <CreateWorkspaceForm />
-        </div>
+        </section>
 
-        {/* Empty State */}
-        <div
-          className="animate-fade-up mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4"
-          style={{ animationDelay: "0.2s" }}
-        >
-          {[
-            {
-              icon: LayoutDashboard,
-              title: "Kanban Boards",
-              desc: "Drag & drop task boards",
-              color: "from-violet-500 to-purple-500",
-            },
-            {
-              icon: FileText,
-              title: "Documents",
-              desc: "Collaborative editing",
-              color: "from-blue-500 to-indigo-500",
-            },
-            {
-              icon: CheckSquare,
-              title: "Tasks",
-              desc: "Track & assign work",
-              color: "from-pink-500 to-rose-500",
-            },
-            {
-              icon: MessageSquare,
-              title: "Chat",
-              desc: "Real-time messaging",
-              color: "from-emerald-500 to-teal-500",
-            },
-          ].map((item) => (
-            <Card
-              key={item.title}
-              className="card-feature group cursor-pointer border-0"
-            >
-              <CardHeader className="pb-3">
+        {/* Feature cards */}
+        <section className="dashboard-section" style={{ animationDelay: "0.15s" }}>
+          <div className="dashboard-section__header">
+            <h2 className="dashboard-section__title">Platform Features</h2>
+            <p className="dashboard-section__subtitle">Everything your team needs in one place</p>
+          </div>
+          <div className="dashboard-features-grid">
+            {features.map((item) => (
+              <div key={item.title} className="dashboard-feature-card">
                 <div
-                  className={`mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${item.color}`}
+                  className="dashboard-feature-card__icon"
+                  style={{
+                    background: item.colorBg,
+                    color: item.color,
+                  }}
                 >
-                  <item.icon className="h-5 w-5 text-white" />
+                  <item.icon style={{ width: 20, height: 20 }} />
                 </div>
-                <CardTitle className="text-base">{item.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                <div className="dashboard-feature-card__content">
+                  <h3 className="dashboard-feature-card__title">{item.title}</h3>
+                  <p className="dashboard-feature-card__desc">{item.desc}</p>
+                </div>
+                <div
+                  className="dashboard-feature-card__accent"
+                  style={{ background: item.color }}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Workspace list */}
-        <div className="animate-fade-up mt-12" style={{ animationDelay: "0.3s" }}>
-          <h2 className="mb-4 text-xl font-semibold">Your Workspaces</h2>
+        <section className="dashboard-section" style={{ animationDelay: "0.2s" }}>
+          <div className="dashboard-section__header">
+            <h2 className="dashboard-section__title">Your Workspaces</h2>
+            <p className="dashboard-section__subtitle">
+              {workspaces.length} workspace{workspaces.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+
           {workspaces.length === 0 ? (
-            <div className="card-professional flex flex-col items-center justify-center p-12 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-                <Plus className="h-8 w-8 text-primary" />
+            <div className="dashboard-empty">
+              <div className="dashboard-empty__icon">
+                <Plus style={{ width: 32, height: 32 }} />
               </div>
-              <h3 className="text-lg font-semibold">No workspaces yet</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Create your first workspace to get started.
+              <h3 className="dashboard-empty__title">No workspaces yet</h3>
+              <p className="dashboard-empty__desc">
+                Create your first workspace above to start collaborating with your team.
               </p>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {workspaces.map((workspace) => {
+            <div className="dashboard-workspaces-grid">
+              {workspaces.map((workspace, idx) => {
                 const isOwner = workspace.owner.toString() === session.user.id;
+                const accentColor = workspaceColors[idx % workspaceColors.length];
 
                 return (
-                  <Link key={workspace._id.toString()} href={`/workspace/${workspace._id.toString()}`}>
-                    <Card className="card-professional border-0 cursor-pointer">
-                      <CardHeader className="pb-3">
-                        <div className="mb-2 flex items-center justify-between gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                            <LayoutDashboard className="h-5 w-5" />
-                          </div>
-                          <span className="rounded-full border border-border/50 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                            {isOwner ? "Owner" : "Member"}
-                          </span>
-                        </div>
-                        <CardTitle className="text-base">{workspace.name}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <p className="text-sm text-muted-foreground">
-                          {workspace.description || "No description yet."}
-                        </p>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>{workspace.members.length} team members</span>
-                          <span>{workspace.slug}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
+                  <Link
+                    key={workspace._id.toString()}
+                    href={`/workspace/${workspace._id.toString()}`}
+                    className="dashboard-workspace-card"
+                  >
+                    <div className="dashboard-workspace-card__top">
+                      <div
+                        className="dashboard-workspace-card__icon"
+                        style={{ background: accentColor }}
+                      >
+                        <LayoutDashboard style={{ width: 18, height: 18, color: "#fff" }} />
+                      </div>
+                      <span
+                        className={`dashboard-workspace-card__badge ${
+                          isOwner
+                            ? "dashboard-workspace-card__badge--owner"
+                            : "dashboard-workspace-card__badge--member"
+                        }`}
+                      >
+                        {isOwner ? "Owner" : "Member"}
+                      </span>
+                    </div>
+
+                    <h3 className="dashboard-workspace-card__name">{workspace.name}</h3>
+                    <p className="dashboard-workspace-card__desc">
+                      {workspace.description || "No description yet."}
+                    </p>
+
+                    <div className="dashboard-workspace-card__footer">
+                      <div className="dashboard-workspace-card__members">
+                        <Users style={{ width: 14, height: 14 }} />
+                        <span>{workspace.members.length} members</span>
+                      </div>
+                      <div className="dashboard-workspace-card__arrow">
+                        <ArrowRight style={{ width: 16, height: 16 }} />
+                      </div>
+                    </div>
+
+                    <div
+                      className="dashboard-workspace-card__glow"
+                      style={{ background: accentColor }}
+                    />
                   </Link>
                 );
               })}
             </div>
           )}
-        </div>
+        </section>
       </main>
     </div>
   );
