@@ -67,6 +67,7 @@ export async function GET(
 
     // The S3 SDK returns a stream (in Node.js, it's a Readable stream)
     // We can cast it to any and then transform it to a Web ReadableStream
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const nodeStream = s3Response.Body as any;
 
     const stream = new ReadableStream({
@@ -90,9 +91,9 @@ export async function GET(
         "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error serving file from S3:", error);
-    if (error.name === "NoSuchKey") {
+    if (error && typeof error === "object" && "name" in error && error.name === "NoSuchKey") {
        return new NextResponse("File missing from S3 bucket", { status: 404 });
     }
     return new NextResponse("Internal Server Error", { status: 500 });

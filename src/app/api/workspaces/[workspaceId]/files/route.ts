@@ -45,9 +45,10 @@ export async function GET(
       .lean();
 
     return NextResponse.json({ success: true, data: files });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching files:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
 
@@ -121,8 +122,9 @@ export async function POST(
       .lean();
 
     return NextResponse.json({ success: true, data: populatedFile });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error uploading file to S3:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
