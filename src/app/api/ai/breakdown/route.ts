@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -35,32 +36,18 @@ ${description ? `Task Description: ${description}` : ""}
 Return ONLY a JSON array of strings, nothing else. Example: ["Design the UI mockup", "Write API endpoint", "Add unit tests"]`;
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 256,
-          },
-        }),
-      }
-    );
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("Gemini API error:", errorText);
-      return NextResponse.json(
-        { success: false, error: "AI service unavailable" },
-        { status: 502 }
-      );
-    }
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 256,
+      },
+    });
 
-    const data = await res.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
+    const text = result.response.text();
 
     // Extract JSON array from the response (handle markdown code blocks)
     const jsonMatch = text.match(/\[[\s\S]*?\]/);
@@ -70,8 +57,8 @@ Return ONLY a JSON array of strings, nothing else. Example: ["Design the UI mock
   } catch (error) {
     console.error("AI breakdown error:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to generate subtasks" },
-      { status: 500 }
+      { success: false, error: "AI service unavailable" },
+      { status: 502 }
     );
   }
 }

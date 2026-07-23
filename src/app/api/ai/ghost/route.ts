@@ -4,6 +4,7 @@ import dbConnect from "@/lib/db";
 import Task from "@/models/Task";
 import Message from "@/models/Message";
 import Workspace from "@/models/Workspace";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /**
  * POST /api/ai/ghost
@@ -114,29 +115,18 @@ Example output:
 [{"title": "Fix login page bug", "description": "Mentioned broken login flow", "assignee_name": "Alice", "priority": "high", "deadline_offset_days": 1}]`;
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 1024,
-          },
-        }),
-      }
-    );
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("Gemini API error:", errorText);
-      return NextResponse.json({ success: false, error: "AI service unavailable" }, { status: 502 });
-    }
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 1024,
+      },
+    });
 
-    const data = await res.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
+    const text = result.response.text();
 
     // Parse the JSON array
     const jsonMatch = text.match(/\[[\s\S]*?\]/);

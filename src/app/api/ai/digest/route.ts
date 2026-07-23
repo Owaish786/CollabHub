@@ -4,6 +4,7 @@ import dbConnect from "@/lib/db";
 import Task from "@/models/Task";
 import Message from "@/models/Message";
 import Workspace from "@/models/Workspace";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /**
  * POST /api/ai/digest
@@ -121,27 +122,18 @@ Do NOT use markdown headers. Keep it chat-friendly.
 Return ONLY the message text.`;
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 512,
-          },
-        }),
-      }
-    );
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    if (!res.ok) {
-      return NextResponse.json({ success: false, error: "AI service unavailable" }, { status: 502 });
-    }
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.8,
+        maxOutputTokens: 512,
+      },
+    });
 
-    const data = await res.json();
-    const digestText = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const digestText = result.response.text();
 
     if (!digestText) {
       return NextResponse.json({ success: false, error: "Failed to generate digest" }, { status: 500 });
