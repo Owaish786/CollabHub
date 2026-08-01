@@ -4,7 +4,7 @@ import dbConnect from "@/lib/db";
 import Task from "@/models/Task";
 import Message from "@/models/Message";
 import Workspace from "@/models/Workspace";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 
 /**
  * POST /api/ai/digest
@@ -18,9 +18,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ success: false, error: "Gemini API key not configured" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Groq API key not configured" }, { status: 500 });
   }
 
   let body: { workspaceId?: string };
@@ -122,18 +122,16 @@ Do NOT use markdown headers. Keep it chat-friendly.
 Return ONLY the message text.`;
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const groq = new Groq({ apiKey });
 
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.8,
-        maxOutputTokens: 512,
-      },
+    const result = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama3-8b-8192",
+      temperature: 0.8,
+      max_tokens: 512,
     });
 
-    const digestText = result.response.text();
+    const digestText = result.choices[0]?.message?.content || "";
 
     if (!digestText) {
       return NextResponse.json({ success: false, error: "Failed to generate digest" }, { status: 500 });

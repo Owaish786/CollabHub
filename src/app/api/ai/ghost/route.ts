@@ -4,7 +4,7 @@ import dbConnect from "@/lib/db";
 import Task from "@/models/Task";
 import Message from "@/models/Message";
 import Workspace from "@/models/Workspace";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 
 /**
  * POST /api/ai/ghost
@@ -20,10 +20,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { success: false, error: "Gemini API key not configured" },
+      { success: false, error: "Groq API key not configured" },
       { status: 500 }
     );
   }
@@ -115,18 +115,16 @@ Example output:
 [{"title": "Fix login page bug", "description": "Mentioned broken login flow", "assignee_name": "Alice", "priority": "high", "deadline_offset_days": 1}]`;
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const groq = new Groq({ apiKey });
 
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 1024,
-      },
+    const result = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama3-8b-8192",
+      temperature: 0.3,
+      max_tokens: 1024,
     });
 
-    const text = result.response.text();
+    const text = result.choices[0]?.message?.content || "";
 
     // Parse the JSON array
     const jsonMatch = text.match(/\[[\s\S]*?\]/);
