@@ -151,6 +151,22 @@ app.prepare().then(() => {
       socket.to(room).emit("new-file", data.file);
     });
 
+    // Handle meeting events
+    socket.on("meeting-created", (data) => {
+      const room = `workspace-${data.workspaceId}`;
+      socket.to(room).emit("meeting-created", data.meeting);
+    });
+
+    socket.on("meeting-update", (meeting) => {
+      const room = `workspace-${meeting.workspace}`;
+      socket.to(room).emit("meeting-updated", meeting);
+    });
+
+    socket.on("meeting-deleted", (data) => {
+      const room = `workspace-${data.workspaceId}`;
+      socket.to(room).emit("meeting-deleted", data.meetingId);
+    });
+
     socket.on("disconnect", () => {
       // Clean up presence from all workspaces
       for (const [workspaceId, wsUsers] of workspacePresence.entries()) {

@@ -8,6 +8,7 @@ import {
   CheckSquare,
   FileText,
   MessageSquare,
+  Video,
   Settings,
   LogOut,
   ChevronLeft,
@@ -33,6 +34,7 @@ const navItems = [
   { href: "/documents", label: "Documents", icon: FileText },
   { href: "/drive", label: "Drive", icon: HardDrive },
   { href: "/chat", label: "Chat", icon: MessageSquare },
+  { href: "/meetings", label: "Meetings", icon: Video },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

@@ -66,6 +66,13 @@ A full-stack, real-time collaboration platform built with **Next.js 16**, **Mong
 - Character count tracking
 - Per-workspace document organization with create, edit, and delete
 
+### 🎥 Meetings & Video Sync
+- Schedule recurring or one-off meetings directly in the workspace
+- Start instant "Quick Syncs" with a single click
+- Track RSVPs and attendance status for invited members
+- Real-time workspace notifications when a meeting starts
+- Meeting room interface ready for WebRTC integration
+
 ### ☁️ Cloud File Storage (Drive)
 - File upload and management powered by **AWS S3**
 - Drag-and-drop file upload interface with progress indicators

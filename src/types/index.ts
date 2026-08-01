@@ -24,7 +24,12 @@ export type ActivityTargetType =
   | "board"
   | "member"
   | "workspace"
-  | "message";
+  | "message"
+  | "meeting";
+
+export type MeetingStatus = "upcoming" | "live" | "ended" | "cancelled";
+export type MeetingType = "quick" | "scheduled";
+export type MeetingParticipantStatus = "pending" | "accepted" | "declined";
 
 export interface WorkspaceMember {
   user: string;
