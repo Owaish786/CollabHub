@@ -118,10 +118,8 @@ export function MeetingCard({ meeting, onUpdateStatus, onCancel }: MeetingCardPr
 
         {/* Dropdown menu for options */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="-mr-2 h-8 w-8 rounded-full text-slate-400 hover:text-slate-600">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
+          <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-800 hover:text-white transition-colors focus:outline-none">
+            <MoreVertical className="h-4 w-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem 

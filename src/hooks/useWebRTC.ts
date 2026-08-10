@@ -3,15 +3,22 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSocket } from "@/components/providers/SocketProvider";
 
+export interface WebRTCUser {
+  id?: string;
+  name?: string;
+  email?: string;
+  image?: string;
+}
+
 interface Peer {
   socketId: string;
   stream: MediaStream;
-  user: Record<string, unknown>; // The user object passed from the server
+  user: WebRTCUser; // The user object passed from the server
 }
 
 interface WebRTCConfig {
   meetingId: string;
-  user?: Record<string, unknown>;
+  user?: WebRTCUser;
   enabled: boolean;
 }
 
@@ -32,7 +39,7 @@ export function useWebRTC({ meetingId, user, enabled }: WebRTCConfig) {
   // Keep track of PeerConnections
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
   // Store user info for peers
-  const peerUsers = useRef<Map<string, Record<string, unknown>>>(new Map());
+  const peerUsers = useRef<Map<string, WebRTCUser>>(new Map());
 
   // Initialize Media Devices
   useEffect(() => {
@@ -75,7 +82,7 @@ export function useWebRTC({ meetingId, user, enabled }: WebRTCConfig) {
     // Join the meeting room
     socket.emit("webrtc-join", { meetingId, user });
 
-    const createPeerConnection = (socketId: string, remoteUser: Record<string, unknown>) => {
+    const createPeerConnection = (socketId: string, remoteUser: WebRTCUser) => {
       if (peerConnections.current.has(socketId)) return peerConnections.current.get(socketId)!;
 
       const pc = new RTCPeerConnection(ICE_SERVERS);
@@ -135,7 +142,7 @@ export function useWebRTC({ meetingId, user, enabled }: WebRTCConfig) {
     // Signaling Listeners
     // ==========================================
 
-    const handleUserJoined = async ({ socketId, user: remoteUser }: { socketId: string, user: Record<string, unknown> }) => {
+    const handleUserJoined = async ({ socketId, user: remoteUser }: { socketId: string, user: WebRTCUser }) => {
       try {
         const pc = createPeerConnection(socketId, remoteUser);
         const offer = await pc.createOffer();
@@ -146,7 +153,7 @@ export function useWebRTC({ meetingId, user, enabled }: WebRTCConfig) {
       }
     };
 
-    const handleOffer = async ({ from, offer, user: remoteUser }: { from: string, offer: RTCSessionDescriptionInit, user: Record<string, unknown> }) => {
+    const handleOffer = async ({ from, offer, user: remoteUser }: { from: string, offer: RTCSessionDescriptionInit, user: WebRTCUser }) => {
       try {
         const pc = createPeerConnection(from, remoteUser);
         await pc.setRemoteDescription(new RTCSessionDescription(offer));

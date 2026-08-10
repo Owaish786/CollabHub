@@ -47,6 +47,14 @@ function VideoPlayer({ stream, isLocal, muted = false }: { stream: MediaStream |
   );
 }
 
+interface MeetingData {
+  _id: string;
+  title: string;
+  description?: string;
+  status: string;
+  organizer?: { _id: string; name: string; email: string; image?: string };
+}
+
 interface MeetingDetailPageProps {
   params: Promise<{ workspaceId: string; meetingId: string }>;
 }
@@ -54,7 +62,7 @@ interface MeetingDetailPageProps {
 export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
   const { workspaceId, meetingId } = use(params);
   const { data: session } = useSession();
-  const [meeting, setMeeting] = useState<Record<string, unknown> | null>(null);
+  const [meeting, setMeeting] = useState<MeetingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [joined, setJoined] = useState(false);
   const router = useRouter();
@@ -166,10 +174,8 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
           )}
           
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-slate-400 hover:text-white hover:bg-white/10">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
+            <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-300 hover:bg-slate-800 hover:text-white transition-colors focus:outline-none">
+              <MoreVertical className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 bg-slate-900 border-white/10 text-slate-200">
               <DropdownMenuItem 
