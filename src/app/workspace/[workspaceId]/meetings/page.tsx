@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect, useCallback, use } from "react";
 import { useSession } from "next-auth/react";
-import { Loader2, Calendar as CalendarIcon, Filter } from "lucide-react";
+import { Loader2, Calendar as CalendarIcon } from "lucide-react";
 import { MeetingCard } from "@/components/features/meetings/MeetingCard";
 import { ScheduleMeetingModal } from "@/components/features/meetings/ScheduleMeetingModal";
 import { toast } from "sonner";
@@ -14,7 +15,7 @@ interface MeetingsPageProps {
 
 export default function MeetingsPage({ params }: MeetingsPageProps) {
   const { workspaceId } = use(params);
-  const { data: session } = useSession();
+  useSession();
   const [meetings, setMeetings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "upcoming" | "past" | "today">("all");
@@ -30,7 +31,7 @@ export default function MeetingsPage({ params }: MeetingsPageProps) {
       } else {
         toast.error("Failed to load meetings");
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred while loading meetings");
     } finally {
       setLoading(false);
@@ -91,7 +92,7 @@ export default function MeetingsPage({ params }: MeetingsPageProps) {
             socket.emit("meeting-update", data.data);
         }
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to update RSVP");
     }
   };
@@ -111,7 +112,7 @@ export default function MeetingsPage({ params }: MeetingsPageProps) {
             socket.emit("meeting-update", data.data);
         }
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to cancel meeting");
     }
   };

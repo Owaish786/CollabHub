@@ -62,7 +62,7 @@ const features = [
     icon: Sparkles,
     title: "AI Assistant",
     description:
-      "Powered by Google Gemini — summarize documents, generate tasks from meeting notes, and unlock smart suggestions.",
+      "Powered by Groq (Llama 3) — scan chats for action items, auto-generate tasks, and produce weekly digests.",
     color: "text-emerald-600",
     bg: "bg-emerald-50",
     border: "border-emerald-100",
@@ -85,9 +85,9 @@ const techStack = [
   { name: "MongoDB Atlas", desc: "Cloud Database", emoji: "🍃" },
   { name: "Tailwind + shadcn", desc: "Premium UI", emoji: "✦" },
   { name: "NextAuth.js v5", desc: "Auth + OAuth", emoji: "🔐" },
-  { name: "Socket.io + Yjs", desc: "Real-Time Engine", emoji: "⚡" },
+  { name: "Socket.IO", desc: "Real-Time Engine", emoji: "⚡" },
   { name: "AWS S3", desc: "File Storage", emoji: "☁️" },
-  { name: "Google Gemini", desc: "AI Assistant", emoji: "✨" },
+  { name: "Groq (Llama 3)", desc: "AI Engine", emoji: "✨" },
   { name: "GitHub Actions", desc: "CI/CD Pipeline", emoji: "🔄" },
 ];
 
@@ -188,7 +188,7 @@ export default function LandingPage() {
           {/* Badge */}
           <div className="animate-fade-up mb-7 inline-flex items-center gap-2 pill" style={{ animationDelay: "0s" }}>
             <Zap className="h-3 w-3" />
-            Powered by MongoDB Atlas &amp; Google Gemini
+            Powered by MongoDB Atlas & Groq AI
           </div>
 
           {/* Headline */}
@@ -310,9 +310,7 @@ export default function LandingPage() {
                 <h3 className="mb-2 text-[15px] font-semibold text-slate-900">{feature.title}</h3>
                 <p className="text-sm leading-relaxed text-slate-500">{feature.description}</p>
 
-                <div className="mt-4 flex items-center gap-1 text-xs font-medium text-indigo-600 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                  Learn more <ChevronRight className="h-3 w-3" />
-                </div>
+
               </div>
             ))}
           </div>
@@ -384,7 +382,7 @@ export default function LandingPage() {
                   {[
                     "99.9% uptime SLA via AWS infrastructure",
                     "End-to-end TypeScript for zero runtime surprises",
-                    "CRDT-based real-time sync — no data loss ever",
+                    "WebSocket-powered real-time sync — instant updates",
                     "Automatic MongoDB Atlas backups",
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2.5 text-sm text-slate-600">
@@ -471,14 +469,14 @@ export default function LandingPage() {
             <span className="text-sm font-semibold text-slate-800">CollabHub</span>
           </div>
           <p className="text-xs text-slate-400">
-            Built with Next.js · MongoDB Atlas · AWS · Google Gemini
+            Built with Next.js · MongoDB Atlas · AWS · Groq AI
           </p>
           <div className="flex items-center gap-5 text-xs text-slate-400">
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-slate-700 transition-colors">
+            <a href="https://github.com/Owaish786/CollabHub" target="_blank" rel="noopener noreferrer" className="hover:text-slate-700 transition-colors">
               GitHub
             </a>
-            <a href="#" className="hover:text-slate-700 transition-colors">Privacy</a>
-            <a href="#" className="hover:text-slate-700 transition-colors">Terms</a>
+            <span className="text-slate-300">·</span>
+            <span>© {new Date().getFullYear()} CollabHub</span>
           </div>
         </div>
       </footer>

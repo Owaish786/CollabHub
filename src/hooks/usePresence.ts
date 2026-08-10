@@ -69,7 +69,8 @@ export function usePresence({ workspaceId, user }: UsePresenceOptions) {
       socket.emit("leave-workspace", workspaceId);
       joinedRef.current = false;
     };
-  }, [socket, isConnected, user, workspaceId, pathname]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, isConnected, user, workspaceId]);
 
   // Track page changes
   useEffect(() => {

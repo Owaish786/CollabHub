@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+
 import Link from "next/link";
 import { Loader2, ArrowLeft, User, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 
 export default function ProfilePage() {
   const { data: session, update } = useSession();
-  const router = useRouter();
+
   
   const [name, setName] = useState(session?.user?.name || "");
   const [saving, setSaving] = useState(false);
