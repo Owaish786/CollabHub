@@ -13,7 +13,7 @@ interface Props {
   children: ReactNode;
   workspaceId: string;
   ws: {
-    _id: { toString(): string };
+    _id: string;
     name: string;
     description?: string;
     settings?: { color?: string };

@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  collabhub:
+    image: ghcr.io/owaish786/collabhub:latest
+    ports:
+      - "80:3000"
+    env_file:
+      - .env.local
+    restart: unless-stopped

@@ -167,8 +167,61 @@ app.prepare().then(() => {
       socket.to(room).emit("meeting-deleted", data.meetingId);
     });
 
+    // ==========================================
+    // WebRTC Signaling (Video/Audio Meetings)
+    // ==========================================
+    
+    socket.on("webrtc-join", (data) => {
+      const { meetingId, user } = data;
+      const room = `meeting-${meetingId}`;
+      socket.join(room);
+      // Notify others in the room that a new peer joined
+      socket.to(room).emit("webrtc-user-joined", { socketId: socket.id, user });
+      console.log(`Socket ${socket.id} joined meeting-${meetingId}`);
+    });
+
+    socket.on("webrtc-offer", (data) => {
+      // Send offer directly to the specific socket
+      io.to(data.to).emit("webrtc-offer", {
+        from: socket.id,
+        offer: data.offer,
+        user: data.user
+      });
+    });
+
+    socket.on("webrtc-answer", (data) => {
+      io.to(data.to).emit("webrtc-answer", {
+        from: socket.id,
+        answer: data.answer
+      });
+    });
+
+    socket.on("webrtc-ice-candidate", (data) => {
+      io.to(data.to).emit("webrtc-ice-candidate", {
+        from: socket.id,
+        candidate: data.candidate
+      });
+    });
+
+    socket.on("webrtc-leave", (meetingId) => {
+      const room = `meeting-${meetingId}`;
+      socket.leave(room);
+      socket.to(room).emit("webrtc-user-left", socket.id);
+      console.log(`Socket ${socket.id} left meeting-${meetingId}`);
+    });
+
+    // When disconnect happens, we must also emit webrtc-user-left
+    // to all meeting rooms this socket was in. We will track this below.
+
     socket.on("disconnect", () => {
-      // Clean up presence from all workspaces
+      // Clean up presence from all workspaces and meetings
+      const rooms = Array.from(socket.rooms);
+      rooms.forEach((room) => {
+        if (room.startsWith("meeting-")) {
+          socket.to(room).emit("webrtc-user-left", socket.id);
+        }
+      });
+
       for (const [workspaceId, wsUsers] of workspacePresence.entries()) {
         if (wsUsers.has(socket.id)) {
           wsUsers.delete(socket.id);

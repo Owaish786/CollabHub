@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Workspace from "@/models/Workspace";
@@ -18,7 +19,12 @@ export async function GET(
   await dbConnect();
 
   try {
-    const meeting = await Meeting.findById(id)
+    const isObjectId = mongoose.Types.ObjectId.isValid(id);
+    const query = isObjectId 
+      ? { _id: id } 
+      : { meetingLink: { $regex: new RegExp(`${id}$`) } };
+
+    const meeting = await Meeting.findOne(query)
       .populate("organizer", "name email image")
       .populate("participants.user", "name email image")
       .lean();

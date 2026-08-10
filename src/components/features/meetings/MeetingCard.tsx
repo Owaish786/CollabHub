@@ -1,10 +1,11 @@
 "use client";
 
-import { Calendar, Clock, Video, CheckCircle2, XCircle, MoreVertical } from "lucide-react";
+import { Calendar, Clock, Video, CheckCircle2, XCircle, MoreVertical, Link as LinkIcon } from "lucide-react";
 import { format, isPast, isFuture, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -115,24 +116,36 @@ export function MeetingCard({ meeting, onUpdateStatus, onCancel }: MeetingCardPr
           </div>
         </div>
 
-        {/* Dropdown menu for organizer */}
-        {isOrganizer && visualStatus === "upcoming" && (
-          <DropdownMenu>
-            <DropdownMenuTrigger render={
-              <Button variant="ghost" size="icon" className="-mr-2 h-8 w-8 rounded-full text-slate-400 hover:text-slate-600">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            } />
-            <DropdownMenuContent align="end" className="w-40">
+        {/* Dropdown menu for options */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="-mr-2 h-8 w-8 rounded-full text-slate-400 hover:text-slate-600">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem 
+              onClick={() => {
+                const url = typeof window !== "undefined" ? window.location.origin + meeting.meetingLink : meeting.meetingLink;
+                navigator.clipboard.writeText(url);
+                toast.success("Meeting link copied to clipboard");
+              }}
+            >
+              <LinkIcon className="mr-2 h-4 w-4" />
+              Copy meeting link
+            </DropdownMenuItem>
+            
+            {isOrganizer && (visualStatus === "upcoming" || visualStatus === "live") && (
               <DropdownMenuItem 
-                className="text-red-600 focus:bg-red-50 focus:text-red-700"
+                className="text-red-600 focus:bg-red-50 focus:text-red-700 mt-1"
                 onClick={() => onCancel?.(meeting._id)}
               >
-                Cancel meeting
+                <XCircle className="mr-2 h-4 w-4" />
+                {visualStatus === "live" ? "End meeting for all" : "Cancel meeting"}
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Body / Description */}
