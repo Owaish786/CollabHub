@@ -257,6 +257,12 @@ export default function RegisterPage() {
                 Continue with GitHub
               </Button>
             )}
+
+            {!hasGoogleProvider && !hasGithubProvider && (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500 mb-5">
+                Social sign-in is unavailable in this environment.
+              </div>
+            )}
           </div>
 
           {(hasGoogleProvider || hasGithubProvider) && (
