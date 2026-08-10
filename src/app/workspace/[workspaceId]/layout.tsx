@@ -32,11 +32,14 @@ export default async function WorkspaceLayout({ children, params }: Props) {
 
   // Serialize to plain object — MongoDB ObjectIds have toJSON/buffer
   // which Next.js refuses to pass to Client Components
+  const workspaceData = workspace as Record<string, unknown>;
+  const settings = workspaceData.settings as Record<string, unknown> | undefined;
+
   const ws = {
     _id: String(workspace._id),
     name: workspace.name as string,
-    description: (workspace as any).description as string | undefined,
-    settings: { color: ((workspace as any).settings?.color as string) ?? "#6366f1" },
+    description: workspaceData.description as string | undefined,
+    settings: { color: (settings?.color as string) ?? "#6366f1" },
   };
 
   return (

@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState, useRef, use } from "react";
-import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Users,
-  MessageSquare,
   Mic,
   MicOff,
   Video,
@@ -56,7 +54,7 @@ interface MeetingDetailPageProps {
 export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
   const { workspaceId, meetingId } = use(params);
   const { data: session } = useSession();
-  const [meeting, setMeeting] = useState<any>(null);
+  const [meeting, setMeeting] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [joined, setJoined] = useState(false);
   const router = useRouter();
@@ -71,7 +69,7 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
     leaveMeeting,
   } = useWebRTC({
     meetingId,
-    user: session?.user as any,
+    user: session?.user as Record<string, unknown> | undefined,
     enabled: joined,
   });
 
