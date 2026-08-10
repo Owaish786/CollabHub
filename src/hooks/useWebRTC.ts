@@ -75,6 +75,8 @@ export function useWebRTC({ meetingId, user, enabled }: WebRTCConfig) {
     };
   }, [enabled]);
 
+  const userStringified = JSON.stringify(user);
+
   // Handle Socket Signaling
   useEffect(() => {
     if (!socket || !isConnected || !enabled || !localStream) return;
@@ -215,7 +217,7 @@ export function useWebRTC({ meetingId, user, enabled }: WebRTCConfig) {
       
       socket.emit("webrtc-leave", meetingId);
     };
-  }, [socket, isConnected, enabled, meetingId, user, localStream]);
+  }, [socket, isConnected, enabled, meetingId, userStringified, localStream]);
 
   // Controls
   const toggleVideo = useCallback(() => {
