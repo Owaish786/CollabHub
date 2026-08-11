@@ -34,6 +34,7 @@ export function ClientWorkspaceLayout({ children, workspaceId, ws, userName, use
       email: session.user.email ?? userEmail,
       image: session.user.image ?? undefined,
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id, session?.user?.name, session?.user?.email, session?.user?.image, userName, userEmail]);
 
   const { peers, cursorsRef, cursorVersionRef, broadcastCursor } = usePresence({

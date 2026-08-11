@@ -217,6 +217,7 @@ export function useWebRTC({ meetingId, user, enabled }: WebRTCConfig) {
       
       socket.emit("webrtc-leave", meetingId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket, isConnected, enabled, meetingId, userStringified, localStream]);
 
   // Controls

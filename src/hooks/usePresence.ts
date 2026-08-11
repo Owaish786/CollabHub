@@ -110,7 +110,10 @@ export function usePresence({ workspaceId, user }: UsePresenceOptions) {
 
   // Listen for cursor updates — write to ref, not state
   const peersRef = useRef<PresenceUser[]>([]);
-  peersRef.current = peers;
+
+  useEffect(() => {
+    peersRef.current = peers;
+  }, [peers]);
 
   useEffect(() => {
     if (!socket) return;
