@@ -14,6 +14,8 @@ import {
   MoreVertical,
   Link as LinkIcon,
   XCircle,
+  Maximize,
+  Minimize,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -93,6 +95,8 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
   const [meeting, setMeeting] = useState<MeetingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [joined, setJoined] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   const {
@@ -170,6 +174,25 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
       toast.error("Failed to copy link — try selecting the URL bar and copying manually");
     }
   }, [workspaceId, meetingId]);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
 
   if (loading || sessionStatus === "loading") {
     return (
@@ -250,7 +273,7 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
 
       <div className="flex-1 flex flex-col md:flex-row gap-0 overflow-hidden">
         {/* Video Area */}
-        <div className="flex-1 flex flex-col relative p-4">
+        <div ref={containerRef} className="flex-1 flex flex-col relative p-4 bg-slate-950">
           
           {!joined ? (
             <div className="flex h-full flex-col items-center justify-center">
@@ -344,6 +367,15 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
                   onClick={toggleVideo}
                 >
                   {isVideoEnabled ? <Video className="h-6 w-6" /> : <VideoOff className="h-6 w-6" />}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="icon"
+                  className="h-14 w-14 rounded-full transition-all hover:scale-105 active:scale-95"
+                  onClick={toggleFullscreen}
+                >
+                  {isFullscreen ? <Minimize className="h-6 w-6" /> : <Maximize className="h-6 w-6" />}
                 </Button>
                 <Button
                   type="button"
