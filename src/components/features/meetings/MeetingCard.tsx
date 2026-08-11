@@ -15,6 +15,30 @@ import {
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
+/** Safely copy text to clipboard with fallback for insecure contexts */
+async function copyToClipboard(text: string): Promise<boolean> {
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch { /* fall through */ }
+  }
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+    const result = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    return result;
+  } catch {
+    return false;
+  }
+}
+
 interface Participant {
   user: {
     _id: string;
@@ -118,15 +142,27 @@ export function MeetingCard({ meeting, onUpdateStatus, onCancel }: MeetingCardPr
 
         {/* Dropdown menu for options */}
         <DropdownMenu>
-          <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-800 hover:text-white transition-colors focus:outline-none">
-            <MoreVertical className="h-4 w-4" />
-          </DropdownMenuTrigger>
+          <DropdownMenuTrigger
+            render={
+              <button
+                type="button"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-colors focus:outline-none"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </button>
+            }
+          />
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem 
-              onClick={() => {
+              className="cursor-pointer"
+              onClick={async () => {
                 const url = typeof window !== "undefined" ? window.location.origin + meeting.meetingLink : meeting.meetingLink;
-                navigator.clipboard.writeText(url);
-                toast.success("Meeting link copied to clipboard");
+                const success = await copyToClipboard(url);
+                if (success) {
+                  toast.success("Meeting link copied to clipboard");
+                } else {
+                  toast.error("Failed to copy link");
+                }
               }}
             >
               <LinkIcon className="mr-2 h-4 w-4" />
@@ -135,7 +171,7 @@ export function MeetingCard({ meeting, onUpdateStatus, onCancel }: MeetingCardPr
             
             {isOrganizer && (visualStatus === "upcoming" || visualStatus === "live") && (
               <DropdownMenuItem 
-                className="text-red-600 focus:bg-red-50 focus:text-red-700 mt-1"
+                className="text-red-600 focus:bg-red-50 focus:text-red-700 mt-1 cursor-pointer"
                 onClick={() => onCancel?.(meeting._id)}
               >
                 <XCircle className="mr-2 h-4 w-4" />
@@ -188,6 +224,7 @@ export function MeetingCard({ meeting, onUpdateStatus, onCancel }: MeetingCardPr
           {!isOrganizer && visualStatus === "upcoming" && myStatus === "pending" && onUpdateStatus && (
             <>
               <Button 
+                type="button"
                 variant="outline" 
                 size="sm" 
                 className="h-8 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
@@ -196,6 +233,7 @@ export function MeetingCard({ meeting, onUpdateStatus, onCancel }: MeetingCardPr
                 Decline
               </Button>
               <Button 
+                type="button"
                 variant="outline" 
                 size="sm" 
                 className="h-8 border-green-200 text-green-700 hover:bg-green-50"

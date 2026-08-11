@@ -40,11 +40,23 @@ interface UsePresenceOptions {
   } | null;
 }
 
+export interface CursorData {
+  x: number;
+  y: number;
+  name: string;
+  color: string;
+}
+
 export function usePresence({ workspaceId, user }: UsePresenceOptions) {
   const { socket, isConnected } = useSocket();
   const pathname = usePathname();
   const [peers, setPeers] = useState<PresenceUser[]>([]);
-  const [cursors, setCursors] = useState<Map<string, { x: number; y: number; name: string; color: string }>>(new Map());
+  
+  // Use a ref for cursors — high-frequency updates that should NOT trigger React re-renders
+  const cursorsRef = useRef<Map<string, CursorData>>(new Map());
+  // A version counter to let CursorOverlay know when to repaint via requestAnimationFrame
+  const cursorVersionRef = useRef(0);
+  
   const joinedRef = useRef(false);
 
   const userStringified = JSON.stringify(user);
@@ -96,30 +108,29 @@ export function usePresence({ workspaceId, user }: UsePresenceOptions) {
     };
   }, [socket]);
 
-  // Listen for cursor updates
+  // Listen for cursor updates — write to ref, not state
+  const peersRef = useRef<PresenceUser[]>([]);
+  peersRef.current = peers;
+
   useEffect(() => {
     if (!socket) return;
 
     const handleCursor = (data: { socketId: string; x: number; y: number }) => {
-      setCursors((prev) => {
-        const next = new Map(prev);
-        // Find the peer to get name and color
-        const peer = peers.find((p) => p.socketId === data.socketId);
-        next.set(data.socketId, {
-          x: data.x,
-          y: data.y,
-          name: peer?.name ?? "Unknown",
-          color: peer?.color ?? "#6366f1",
-        });
-        return next;
+      const peer = peersRef.current.find((p) => p.socketId === data.socketId);
+      cursorsRef.current.set(data.socketId, {
+        x: data.x,
+        y: data.y,
+        name: peer?.name ?? "Unknown",
+        color: peer?.color ?? "#6366f1",
       });
+      cursorVersionRef.current++;
     };
 
     socket.on("cursor-update", handleCursor);
     return () => {
       socket.off("cursor-update", handleCursor);
     };
-  }, [socket, peers]);
+  }, [socket]);
 
   // Broadcast own cursor movement (throttled)
   const lastEmitRef = useRef(0);
@@ -134,5 +145,5 @@ export function usePresence({ workspaceId, user }: UsePresenceOptions) {
     [socket, isConnected, workspaceId]
   );
 
-  return { peers, cursors, broadcastCursor };
+  return { peers, cursorsRef, cursorVersionRef, broadcastCursor };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { WorkspaceSidebar } from "@/components/layout/WorkspaceSidebar";
 import { CursorOverlay } from "@/components/features/presence/CursorOverlay";
@@ -26,16 +26,17 @@ export function ClientWorkspaceLayout({ children, workspaceId, ws, userName, use
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: session } = useSession();
 
-  const user = session?.user
-    ? {
-        id: session.user.id ?? "",
-        name: session.user.name ?? userName,
-        email: session.user.email ?? userEmail,
-        image: session.user.image ?? undefined,
-      }
-    : null;
+  const user = useMemo(() => {
+    if (!session?.user) return null;
+    return {
+      id: session.user.id ?? "",
+      name: session.user.name ?? userName,
+      email: session.user.email ?? userEmail,
+      image: session.user.image ?? undefined,
+    };
+  }, [session?.user?.id, session?.user?.name, session?.user?.email, session?.user?.image, userName, userEmail]);
 
-  const { peers, cursors, broadcastCursor } = usePresence({
+  const { peers, cursorsRef, cursorVersionRef, broadcastCursor } = usePresence({
     workspaceId,
     user,
   });
@@ -56,7 +57,7 @@ export function ClientWorkspaceLayout({ children, workspaceId, ws, userName, use
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 relative">
       {/* Live Cursors overlay */}
-      <CursorOverlay cursors={cursors} />
+      <CursorOverlay cursorsRef={cursorsRef} cursorVersionRef={cursorVersionRef} />
 
       {/* Mobile header */}
       <div className="md:hidden absolute top-0 left-0 w-full h-14 bg-white border-b border-slate-200 z-40 flex items-center px-4 justify-between">

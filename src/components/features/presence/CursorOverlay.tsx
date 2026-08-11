@@ -1,16 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-
-interface CursorData {
-  x: number;
-  y: number;
-  name: string;
-  color: string;
-}
+import type { CursorData } from "@/hooks/usePresence";
 
 interface CursorOverlayProps {
-  cursors: Map<string, CursorData>;
+  cursorsRef: React.RefObject<Map<string, CursorData>>;
+  cursorVersionRef: React.RefObject<number>;
 }
 
 /** Smooth-interpolated cursor with a name label that fades in/out. */
@@ -94,12 +89,31 @@ function AnimatedCursor({
   );
 }
 
-export function CursorOverlay({ cursors }: CursorOverlayProps) {
-  if (cursors.size === 0) return null;
+export function CursorOverlay({ cursorsRef, cursorVersionRef }: CursorOverlayProps) {
+  // Use requestAnimationFrame to read cursor data from the ref without triggering React state updates
+  const [cursorEntries, setCursorEntries] = useState<[string, CursorData][]>([]);
+  const lastVersionRef = useRef(0);
+
+  useEffect(() => {
+    let rafId: number;
+
+    const sync = () => {
+      if (cursorVersionRef.current !== lastVersionRef.current) {
+        lastVersionRef.current = cursorVersionRef.current;
+        setCursorEntries(Array.from(cursorsRef.current.entries()));
+      }
+      rafId = requestAnimationFrame(sync);
+    };
+
+    rafId = requestAnimationFrame(sync);
+    return () => cancelAnimationFrame(rafId);
+  }, [cursorsRef, cursorVersionRef]);
+
+  if (cursorEntries.length === 0) return null;
 
   return (
     <>
-      {Array.from(cursors.entries()).map(([socketId, cursor]) => (
+      {cursorEntries.map(([socketId, cursor]) => (
         <AnimatedCursor
           key={socketId}
           targetX={cursor.x}

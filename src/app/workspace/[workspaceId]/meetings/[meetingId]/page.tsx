@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, use } from "react";
+import { useEffect, useState, useRef, use, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -26,6 +26,34 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useWebRTC } from "@/hooks/useWebRTC";
+
+/** Safely copy text to clipboard with fallback for insecure contexts */
+async function copyToClipboard(text: string): Promise<boolean> {
+  // Try the modern Clipboard API first
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fall through to fallback
+    }
+  }
+  // Fallback: create a temporary textarea and use execCommand
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+    const result = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    return result;
+  } catch {
+    return false;
+  }
+}
 
 function VideoPlayer({ stream, isLocal, muted = false }: { stream: MediaStream | null; isLocal: boolean; muted?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -61,7 +89,7 @@ interface MeetingDetailPageProps {
 
 export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
   const { workspaceId, meetingId } = use(params);
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const [meeting, setMeeting] = useState<MeetingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [joined, setJoined] = useState(false);
@@ -102,22 +130,22 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
     fetchMeeting();
   }, [meetingId, workspaceId]);
 
-  const handleJoinCall = () => {
+  const handleJoinCall = useCallback(() => {
     if (!session) return;
     setJoined(true);
-  };
+  }, [session]);
 
-  const handleLeaveCall = () => {
+  const handleLeaveCall = useCallback(() => {
     leaveMeeting();
     router.push(`/workspace/${workspaceId}/meetings`);
-  };
+  }, [leaveMeeting, router, workspaceId]);
 
-  const handleEndMeeting = async () => {
+  const handleEndMeeting = useCallback(async () => {
     try {
       const res = await fetch(`/api/meetings/${meetingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "cancelled" }), // or "ended" depending on backend
+        body: JSON.stringify({ status: "cancelled" }),
       });
       if (res.ok) {
         toast.success("Meeting ended");
@@ -128,9 +156,21 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
     } catch {
       toast.error("An error occurred");
     }
-  };
+  }, [meetingId, handleLeaveCall]);
 
-  if (loading) {
+  const handleCopyLink = useCallback(async () => {
+    const url = typeof window !== "undefined" 
+      ? window.location.origin + `/workspace/${workspaceId}/meetings/${meetingId}` 
+      : "";
+    const success = await copyToClipboard(url);
+    if (success) {
+      toast.success("Meeting link copied to clipboard");
+    } else {
+      toast.error("Failed to copy link — try selecting the URL bar and copying manually");
+    }
+  }, [workspaceId, meetingId]);
+
+  if (loading || sessionStatus === "loading") {
     return (
       <div className="flex h-full items-center justify-center bg-slate-950">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
@@ -149,7 +189,7 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
           The meeting link might be invalid or the meeting has been deleted.
         </p>
         <Link href={`/workspace/${workspaceId}/meetings`}>
-          <Button className="mt-6 bg-indigo-600 hover:bg-indigo-700">Back to Meetings</Button>
+          <Button type="button" className="mt-6 bg-indigo-600 hover:bg-indigo-700">Back to Meetings</Button>
         </Link>
       </div>
     );
@@ -174,17 +214,20 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
           )}
           
           <DropdownMenu>
-            <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-300 hover:bg-slate-800 hover:text-white transition-colors focus:outline-none">
-              <MoreVertical className="h-4 w-4" />
-            </DropdownMenuTrigger>
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-300 hover:bg-slate-800 hover:text-white transition-colors focus:outline-none"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+              }
+            />
             <DropdownMenuContent align="end" className="w-48 bg-slate-900 border-white/10 text-slate-200">
               <DropdownMenuItem 
-                className="hover:bg-white/10 focus:bg-white/10 focus:text-white"
-                onClick={() => {
-                  const url = typeof window !== "undefined" ? window.location.origin + `/workspace/${workspaceId}/meetings/${meetingId}` : "";
-                  navigator.clipboard.writeText(url);
-                  toast.success("Meeting link copied to clipboard");
-                }}
+                className="hover:bg-white/10 focus:bg-white/10 focus:text-white cursor-pointer"
+                onClick={handleCopyLink}
               >
                 <LinkIcon className="mr-2 h-4 w-4" />
                 Copy meeting link
@@ -192,7 +235,7 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
               
               {session?.user?.id === meeting.organizer?._id && (
                 <DropdownMenuItem 
-                  className="text-red-400 hover:bg-red-500/10 focus:bg-red-500/10 focus:text-red-300 mt-1"
+                  className="text-red-400 hover:bg-red-500/10 focus:bg-red-500/10 focus:text-red-300 mt-1 cursor-pointer"
                   onClick={handleEndMeeting}
                 >
                   <XCircle className="mr-2 h-4 w-4" />
@@ -218,7 +261,9 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
                 Your microphone and camera will be requested when you join.
               </p>
               <Button 
+                type="button"
                 onClick={handleJoinCall}
+                disabled={!session}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-900/30 px-8 py-6 text-lg rounded-full font-medium"
               >
                 Join Call
@@ -273,6 +318,7 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
               {/* Bottom Toolbar */}
               <div className="flex items-center justify-center gap-4 rounded-2xl border border-white/10 bg-slate-900/80 p-4 shadow-xl backdrop-blur-md shrink-0">
                 <Button
+                  type="button"
                   variant={isAudioEnabled ? "secondary" : "destructive"}
                   size="icon"
                   className="h-14 w-14 rounded-full transition-all hover:scale-105 active:scale-95"
@@ -281,6 +327,7 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
                   {isAudioEnabled ? <Mic className="h-6 w-6" /> : <MicOff className="h-6 w-6" />}
                 </Button>
                 <Button
+                  type="button"
                   variant={isVideoEnabled ? "secondary" : "destructive"}
                   size="icon"
                   className="h-14 w-14 rounded-full transition-all hover:scale-105 active:scale-95"
@@ -289,6 +336,7 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
                   {isVideoEnabled ? <Video className="h-6 w-6" /> : <VideoOff className="h-6 w-6" />}
                 </Button>
                 <Button
+                  type="button"
                   variant="destructive"
                   className="h-14 rounded-full px-8 font-semibold text-base transition-all hover:bg-red-700 hover:scale-105 active:scale-95"
                   onClick={handleLeaveCall}
