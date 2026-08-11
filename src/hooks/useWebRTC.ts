@@ -35,6 +35,7 @@ export function useWebRTC({ meetingId, user, enabled }: WebRTCConfig) {
   const [peers, setPeers] = useState<Peer[]>([]);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  const [mediaError, setMediaError] = useState<string | null>(null);
   
   // Keep track of PeerConnections
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
@@ -49,6 +50,16 @@ export function useWebRTC({ meetingId, user, enabled }: WebRTCConfig) {
     let stream: MediaStream | null = null;
 
     const initMedia = async () => {
+      // Check if mediaDevices API is available (requires HTTPS or localhost)
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        const msg = window.location.protocol === "http:" 
+          ? "Camera and microphone require a secure (HTTPS) connection. Please access this site via HTTPS."
+          : "Your browser does not support camera/microphone access.";
+        console.error(msg);
+        if (mounted) setMediaError(msg);
+        return;
+      }
+
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: true,
@@ -56,12 +67,24 @@ export function useWebRTC({ meetingId, user, enabled }: WebRTCConfig) {
         });
         if (mounted) {
           setLocalStream(stream);
+          setMediaError(null);
         } else {
-          // Cleanup if component unmounted while requesting permissions
           stream.getTracks().forEach((track) => track.stop());
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Error accessing media devices.", err);
+        if (mounted) {
+          const name = err instanceof DOMException ? err.name : "";
+          if (name === "NotAllowedError") {
+            setMediaError("Camera/microphone permission was denied. Please allow access in your browser settings and try again.");
+          } else if (name === "NotFoundError") {
+            setMediaError("No camera or microphone found on this device.");
+          } else if (name === "NotReadableError") {
+            setMediaError("Camera or microphone is already in use by another application.");
+          } else {
+            setMediaError("Could not access camera/microphone. Please check your browser permissions.");
+          }
+        }
       }
     };
 
@@ -259,6 +282,7 @@ export function useWebRTC({ meetingId, user, enabled }: WebRTCConfig) {
     peers,
     isVideoEnabled,
     isAudioEnabled,
+    mediaError,
     toggleVideo,
     toggleAudio,
     leaveMeeting,

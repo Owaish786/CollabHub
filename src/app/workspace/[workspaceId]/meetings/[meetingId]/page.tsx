@@ -100,6 +100,7 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
     peers,
     isVideoEnabled,
     isAudioEnabled,
+    mediaError,
     toggleVideo,
     toggleAudio,
     leaveMeeting,
@@ -278,7 +279,16 @@ export default function MeetingDetailPage({ params }: MeetingDetailPageProps) {
                 {/* Local Video */}
                 <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl h-full min-h-[250px]">
                   <div className="flex h-full items-center justify-center bg-slate-900">
-                    <VideoPlayer stream={localStream} isLocal={true} />
+                    {mediaError ? (
+                      <div className="flex flex-col items-center justify-center p-6 text-center">
+                        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/20 ring-1 ring-red-500/30">
+                          <VideoOff className="h-8 w-8 text-red-400" />
+                        </div>
+                        <p className="text-sm text-red-300 max-w-xs">{mediaError}</p>
+                      </div>
+                    ) : (
+                      <VideoPlayer stream={localStream} isLocal={true} />
+                    )}
                   </div>
                   
                   {/* Local overlay */}
