@@ -1,4 +1,4 @@
-FROM node:20-alpine AS base
+FROM node:20-alpine3.20 AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -16,7 +16,7 @@ COPY . .
 
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
 
@@ -24,8 +24,8 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -46,9 +46,9 @@ COPY --from=builder /app/next.config.ts ./next.config.ts
 USER nextjs
 
 EXPOSE 3000
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-ENV AUTH_TRUST_HOST true
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+ENV AUTH_TRUST_HOST=true
 
 # Run custom server
 CMD ["node", "server.js"]
