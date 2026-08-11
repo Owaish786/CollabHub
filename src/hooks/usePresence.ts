@@ -47,6 +47,8 @@ export function usePresence({ workspaceId, user }: UsePresenceOptions) {
   const [cursors, setCursors] = useState<Map<string, { x: number; y: number; name: string; color: string }>>(new Map());
   const joinedRef = useRef(false);
 
+  const userStringified = JSON.stringify(user);
+
   // Join workspace with identity
   useEffect(() => {
     if (!socket || !isConnected || !user || !workspaceId) return;
@@ -70,7 +72,7 @@ export function usePresence({ workspaceId, user }: UsePresenceOptions) {
       joinedRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket, isConnected, user, workspaceId]);
+  }, [socket, isConnected, userStringified, workspaceId]);
 
   // Track page changes
   useEffect(() => {
